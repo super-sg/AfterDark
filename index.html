@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="rating" content="RTA-5042-1996-1400-1577-RTA">
+    <title>Sex Porn HD | Replicated Premium Catalog Directory</title>
+    <!-- Google Fonts for Outfit typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Main stylesheet link -->
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body class="modal-open">
+    <div id="app">
+        <!-- Age Verification Overlay Backdrop (starts open, closed by ENTER) -->
+        <dialog id="splash-modal" class="modal" open>
+            <div class="modal-backdrop"></div>
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-title-row">
+                        <div class="eighteen-plus-badge">18+</div>
+                        <h2 class="modal-title" id="splash-page-title">
+                            Sex Porn HD is an ADULTS ONLY website!
+                        </h2>
+                    </div>
+                    <div class="modal-body">
+                        <span>You are about to enter a website that contains explicit material (pornography). This
+                            website should only be accessed if you are at least 18 years old or of legal age to view
+                            such material in your local jurisdiction, whichever is greater. Furthermore, you represent
+                            and warrant that you will not allow any minor access to this site or services.</span>
+                        <span>PARENTS, PLEASE BE ADVISED: If you are a parent, it is your responsibility to keep any
+                            age-restricted content from being displayed to your children or wards. Protect your children
+                            from adult content and block access to this site by using parental controls. We use the
+                            "Restricted To Adults" (RTA) website label to better enable parental filtering. Parental
+                            tools that are compatible with the RTA label will block access to this site. <a
+                                href="https://www.rtalabel.org/" target="_blank">More information about the RTA Label
+                                and compatible services can be found here</a>.</span>
+                        <span>Other steps you can take to protect your children are:</span>
+                        <ul>
+                            <li>Use family filters of your operating systems and/or browsers;</li>
+                            <li>When using a search engine such as Google, Bing or Yahoo, check the safe search settings
+                                where you can exclude adult content sites from your search results;</li>
+                            <li>Ask your internet service provider if they offer additional filters;</li>
+                            <li>Be responsible, know what your children are doing online.</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="eighteen-plus-button" onclick="verifyAge()">I am
+                            18+<br>ENTER</button>
+                        <p>When accessing this site you agree to <a href="https://analgalore.com/search?q=terms" target="_blank" rel="noopener noreferrer">our terms of use</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Navigation Drawer Overlay for Mobile -->
+        <div class="flyout-overlay" id="drawer-overlay" onclick="toggleDrawer(false)"></div>
+        <aside class="flyout-menu" id="navigation-drawer">
+            <div class="flyout-header">
+                <div class="brand">
+                    <i class="fa-solid fa-circle-play brand-icon"></i>
+                    <span class="brand-name">SexPorn<span>HD</span></span>
+                </div>
+                <button class="flyout-close" onclick="toggleDrawer(false)"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <nav class="flyout-nav">
+                <!-- Videos Accordion -->
+                <div class="accordion" id="accordion-videos">
+                    <button class="accordion-trigger" onclick="toggleAccordion('accordion-videos')">
+                        Videos <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content">
+                        <a class="accordion-item" onclick="setVideoSort('popular')">Popular videos</a>
+                        <a class="accordion-item" onclick="setVideoSort('new')">New videos</a>
+                        <a class="accordion-item" onclick="setVideoSort('rating')">Top rated videos</a>
+                    </div>
+                </div>
+                <!-- Categories Accordion -->
+                <div class="accordion" id="accordion-categories">
+                    <button class="accordion-trigger" onclick="toggleAccordion('accordion-categories')">
+                        Categories <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content" id="mobile-categories-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <!-- Pornstars Accordion -->
+                <div class="accordion" id="accordion-pornstars">
+                    <button class="accordion-trigger" onclick="toggleAccordion('accordion-pornstars')">
+                        Pornstars <i class="fa-solid fa-chevron-down"></i>
+                    </button>
+                    <div class="accordion-content" id="mobile-pornstars-list">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Header Navigation Bar -->
+        <header class="header">
+            <div class="header-container">
+                <!-- Mobile row trigger -->
+                <div class="mobile-header-row">
+                    <button class="menu-trigger" onclick="toggleDrawer(true)"><i class="fa-solid fa-bars"></i></button>
+                    <div class="brand" onclick="resetToHome()">
+                        <i class="fa-solid fa-circle-play brand-icon"></i>
+                        <span class="brand-name">SexPorn<span>HD</span></span>
+                    </div>
+                    <button class="menu-trigger" onclick="toggleMobileSearch()"><i
+                            class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <!-- Desktop elements -->
+                <div class="brand mobile-hidden" onclick="resetToHome()">
+                    <i class="fa-solid fa-circle-play brand-icon"></i>
+                    <span class="brand-name">SexPorn<span>HD</span></span>
+                </div>
+
+                <nav class="desktop-navigation mobile-hidden">
+                    <!-- Videos Dropdown -->
+                    <div class="nav-item">
+                        Videos <i class="fa-solid fa-angle-down"></i>
+                        <div class="dropdown-menu">
+                            <a class="dropdown-item" onclick="setVideoSort('popular')">Popular videos</a>
+                            <a class="dropdown-item" onclick="setVideoSort('new')">New videos</a>
+                            <a class="dropdown-item" onclick="setVideoSort('rating')">Top rated videos</a>
+                        </div>
+                    </div>
+                    <!-- Categories Dropdown -->
+                    <div class="nav-item">
+                        Categories <i class="fa-solid fa-angle-down"></i>
+                        <div class="dropdown-menu" id="header-categories-dropdown">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <!-- Pornstars Dropdown -->
+                    <div class="nav-item">
+                        Pornstars <i class="fa-solid fa-angle-down"></i>
+                        <div class="dropdown-menu" id="header-pornstars-dropdown">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <!-- More Dropdown -->
+                    <div class="nav-item">
+                        More <i class="fa-solid fa-angle-down"></i>
+                        <div class="dropdown-menu">
+                            <div class="dropdown-item font-bold"
+                                style="color: var(--accent-red); font-size: 11px; text-transform: uppercase;">Live Cams
+                            </div>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=stripchat" target="_blank"
+                                rel="sponsored noopener noreferrer">Stripchat <i class="fa-solid fa-circle-info"></i></a>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=flirt4free" target="_blank"
+                                rel="sponsored noopener noreferrer">Flirt4Free <i class="fa-solid fa-circle-info"></i></a>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=livejasmin" target="_blank"
+                                rel="sponsored noopener noreferrer">LiveJasmin <i class="fa-solid fa-circle-info"></i></a>
+                            <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 6px 0;"></div>
+                            <div class="dropdown-item font-bold"
+                                style="color: var(--accent-red); font-size: 11px; text-transform: uppercase;">AI Chat
+                            </div>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=ourdream.ai" target="_blank"
+                                rel="sponsored noopener noreferrer">OurDream.AI <i class="fa-solid fa-circle-info"></i></a>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=candy.ai" target="_blank" rel="sponsored noopener noreferrer">Candy.AI <i
+                                    class="fa-solid fa-circle-info"></i></a>
+                            <a class="dropdown-item" href="https://analgalore.com/search?q=lovescape" target="_blank"
+                                rel="sponsored noopener noreferrer">Lovescape <i class="fa-solid fa-circle-info"></i></a>
+                        </div>
+                    </div>
+                </nav>
+
+                <!-- Search Input Container -->
+                <div class="header-search mobile-hidden" id="desktop-search-container">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="search" id="search-query-input" placeholder="Search categories & videos..."
+                            autocomplete="off" oninput="handleSearchInput(this.value)"
+                            onkeydown="handleSearchSubmit(event, this.value)">
+                    </div>
+                    <div class="autocomplete-dropdown" id="autocomplete-suggestions">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Custom Selectors Dropdowns -->
+                <div class="header-actions mobile-hidden">
+                    <!-- Orientation Dropdown -->
+                    <div class="settings-group" id="orientation-dropdown">
+                        <button class="settings-btn" onclick="toggleSettingsGroup('orientation-dropdown')"
+                            title="Orientation">
+                            <i class="fa-solid fa-venus-mars"></i>
+                        </button>
+                        <div class="settings-dropdown-menu">
+                            <div class="dropdown-item font-bold"
+                                style="font-size: 11px; text-transform: uppercase; color: var(--accent-red); padding-bottom: 6px;">
+                                Select Orientation</div>
+                            <a class="dropdown-item active" onclick="setOrientation('all', this)">All Orientation</a>
+                            <a class="dropdown-item" onclick="setOrientation('straight', this)">Straight</a>
+                            <a class="dropdown-item" onclick="setOrientation('gay', this)">Gay</a>
+                            <a class="dropdown-item" onclick="setOrientation('trans', this)">Trans</a>
+                        </div>
+                    </div>
+                    <!-- Settings Dropdown -->
+                    <div class="settings-group" id="settings-dropdown">
+                        <button class="settings-btn" onclick="toggleSettingsGroup('settings-dropdown')"
+                            title="Settings">
+                            <i class="fa-solid fa-cogs"></i>
+                        </button>
+                        <div class="settings-dropdown-menu">
+                            <!-- Toggle layout switch -->
+                            <div class="switch-row">
+                                <span>Large Thumbnails</span>
+                                <label class="switch">
+                                    <input type="checkbox" id="thumbnail-size-toggle"
+                                        onchange="toggleThumbnailSize(this.checked)">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            <div style="height: 1px; background: rgba(255,255,255,0.05); margin: 6px 0;"></div>
+                            <div class="dropdown-item font-bold"
+                                style="font-size: 11px; text-transform: uppercase; color: var(--accent-red); padding-bottom: 6px;">
+                                Pricing Filter</div>
+                            <a class="dropdown-item active" onclick="setPricing('all', this)">Free & Premium</a>
+                            <a class="dropdown-item" onclick="setPricing('free', this)">Free only</a>
+                            <a class="dropdown-item" onclick="setPricing('premium', this)">Premium only</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Top Leaderboard Ad Banner (between header and content) -->
+        <div class="ad-leaderboard-wrapper" id="ad-top-leaderboard">
+            <div class="ad-label">Advertisement</div>
+            <div class="ad-slot ad-leaderboard">
+                <!-- Google AdSense Leaderboard 728x90 -->
+                <!-- Replace this div with your AdSense <ins> tag -->
+                <!-- <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+                <div class="ad-placeholder-inner">
+                    <i class="fa-solid fa-rectangle-ad"></i>
+                    <span>Ad Space &mdash; 728 &times; 90 Leaderboard</span>
+                    <span class="ad-size-hint">Google AdSense Ready</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Mobile search bar expansion toggler -->
+            <div id="mobile-search-bar" style="display: none; padding-bottom: 16px; position: relative;">
+                <div class="search-input-wrapper">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="mobile-search-query" placeholder="Search categories &amp; videos..."
+                        autocomplete="off" oninput="handleSearchInput(this.value, true)"
+                        onkeydown="handleSearchSubmit(event, this.value)"
+                        style="width: 100%; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 100px; padding: 10px 16px 10px 40px; color: var(--text-primary);">
+                </div>
+                <div class="autocomplete-dropdown" id="mobile-autocomplete-suggestions" style="width: 100%;">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Three-column layout: Left Ad Rail | Main Content | Right Sidebar -->
+            <div class="outer-layout">
+
+                <!-- Left Ad Rail (desktop only) -->
+                <aside class="ad-rail ad-rail-left mobile-hidden" id="ad-rail-left">
+                    <!-- Google AdSense Skyscraper 160x600 -->
+                    <div class="ad-label">Ad</div>
+                    <div class="ad-slot ad-skyscraper">
+                        <!-- Replace with AdSense <ins> tag -->
+                        <!-- <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+                        <div class="ad-placeholder-inner vertical">
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                            <span>160&times;600</span>
+                            <span class="ad-size-hint">Wide Skyscraper</span>
+                        </div>
+                    </div>
+                    <!-- Second smaller ad slot -->
+                    <div class="ad-slot ad-square" style="margin-top:20px;">
+                        <div class="ad-placeholder-inner vertical">
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                            <span>300&times;250</span>
+                            <span class="ad-size-hint">Medium Rectangle</span>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Center: main catalog -->
+                <div class="catalog-layout">
+                    <!-- Left Main Section -->
+                    <section class="left-section">
+                        <div class="section-header">
+                            <h2 class="section-title" id="catalog-title">Most Popular Categories</h2>
+                            <div class="filter-indicators" style="font-size: 13px; color: var(--text-secondary);"
+                                id="catalog-meta">
+                                Showing <strong id="catalog-count">0</strong> items
+                            </div>
+                        </div>
+
+                        <!-- Scrollable Tag pills list -->
+                        <div class="pill-group-container">
+                            <div class="pill-group" id="tags-pills-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Card Grid -->
+                        <div class="cards-grid" id="main-catalog-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </section>
+
+                    <!-- Right Sidebar List grouped by starting characters -->
+                    <aside class="right-sidebar mobile-hidden">
+                        <div class="sidebar-ad-slot">
+                            <div class="ad-label">Ad</div>
+                            <div class="ad-slot ad-square">
+                                <!-- Google AdSense 300x250 -->
+                                <!-- <ins class="adsbygoogle" style="display:inline-block;width:300px;height:250px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+                                <div class="ad-placeholder-inner vertical">
+                                    <i class="fa-solid fa-rectangle-ad"></i>
+                                    <span>300&times;250</span>
+                                    <span class="ad-size-hint">Medium Rectangle</span>
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="sidebar-title" style="margin-top:20px;">Popular Directories</h3>
+                        <div class="popular-sidebar-list" id="sidebar-character-groups">
+                            <!-- Populated dynamically -->
+                        </div>
+                        <!-- Sticky sidebar ad at bottom -->
+                        <div class="ad-slot ad-square" style="margin-top:24px;">
+                            <!-- <ins class="adsbygoogle" style="display:inline-block;width:300px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+                            <div class="ad-placeholder-inner vertical">
+                                <i class="fa-solid fa-rectangle-ad"></i>
+                                <span>300&times;600</span>
+                                <span class="ad-size-hint">Half Page Ad</span>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+
+                <!-- Right Ad Rail (desktop only) -->
+                <aside class="ad-rail ad-rail-right mobile-hidden" id="ad-rail-right">
+                    <div class="ad-label">Ad</div>
+                    <div class="ad-slot ad-skyscraper">
+                        <!-- Replace with AdSense <ins> tag -->
+                        <!-- <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
+                        <div class="ad-placeholder-inner vertical">
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                            <span>160&times;600</span>
+                            <span class="ad-size-hint">Wide Skyscraper</span>
+                        </div>
+                    </div>
+                    <div class="ad-slot ad-square" style="margin-top:20px;">
+                        <div class="ad-placeholder-inner vertical">
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                            <span>300&times;250</span>
+                            <span class="ad-size-hint">Medium Rectangle</span>
+                        </div>
+                    </div>
+                </aside>
+
+            </div><!-- /outer-layout -->
+        </main>
+
+        <!-- Video Player Modal -->
+        <div id="video-modal" class="video-modal-overlay" onclick="closeVideoModal(event)">
+            <div class="video-modal-box">
+                <button class="video-modal-close" onclick="closeVideoModal(null, true)">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="video-modal-title-bar">
+                    <h3 id="video-modal-title">Loading...</h3>
+                    <a id="video-modal-extlink" href="#" target="_blank" rel="noopener noreferrer" class="video-modal-ext-btn">
+                        <i class="fa-solid fa-external-link-alt"></i> Watch on Source
+                    </a>
+                </div>
+                <div class="video-modal-player" id="video-modal-player">
+                    <!-- iframe injected by JS -->
+                </div>
+                <div class="video-modal-ad">
+                    <div class="ad-label">Ad</div>
+                    <div class="ad-slot ad-leaderboard">
+                        <div class="ad-placeholder-inner">
+                            <i class="fa-solid fa-rectangle-ad"></i>
+                            <span>728&times;90 &mdash; Leaderboard Ad</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Section -->
+        <footer class="footer-container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <div class="brand">
+                        <i class="fa-solid fa-circle-play brand-icon"></i>
+                        <span class="brand-name">SexPorn<span>HD</span></span>
+                    </div>
+                    <div class="footer-logo-subtext">
+                        Sex Porn HD - The biggest variety in free anal and assfucking porn tube videos directory replica
+                        portal.
+                    </div>
+                    <div class="parents-warning-card">
+                        <h4><i class="fa-solid fa-triangle-exclamation"></i> Parental Control Warning</h4>
+                        Sex Porn HD uses the "Restricted To Adults" (RTA) website label to enable parent-level block
+                        filtering. Protect your children from adult content by configuring safe browser labels.
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Support</h3>
+                    <a href="https://analgalore.com/search?q=faq" target="_blank" rel="noopener noreferrer">FAQ</a>
+                    <a href="https://analgalore.com/search?q=feedback" target="_blank" rel="noopener noreferrer">Help Us Improve</a>
+                    <a href="https://analgalore.com/search?q=contact" target="_blank" rel="noopener noreferrer">Contact Us</a>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Advertisers</h3>
+                    <a href="https://analgalore.com/search?q=advertise" target="_blank" rel="noopener noreferrer">Buy Traffic / Get Listed</a>
+                </div>
+
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <a href="https://analgalore.com/search?q=terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                    <a href="https://analgalore.com/search?q=privacy" target="_blank" rel="noopener noreferrer">Privacy Statement</a>
+                    <a href="https://analgalore.com/search?q=responsibility" target="_blank" rel="noopener noreferrer">Statement of Responsibility</a>
+                    <a href="https://analgalore.com/search?q=dmca+2257" target="_blank" rel="noopener noreferrer">DMCA / Copyright (2257)</a>
+                </div>
+            </div>
+
+            <div
+                style="max-width: 1400px; margin: 20px auto 0; padding-top: 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <p class="copyright-text">&copy; 2026 Sex Porn HD. All rights reserved. Replica catalogue template
+                    portal.</p>
+                <div class="footer-badges">
+                    <img src="https://rtalabel.org/images/rta_logo.svg" alt="RTA Verified"
+                        style="height: 35px; opacity: 0.5; filter: invert(1);">
+                    <span
+                        style="font-size: 11px; font-weight: 700; color: var(--text-dimmed); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 4px;">ASACP
+                        PROTECTED</span>
+                    <span
+                        style="font-size: 11px; font-weight: 700; color: var(--text-dimmed); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 4px;">18
+                        U.S.C. 2257</span>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Scroll to Top Button -->
+        <button class="scroll-top-btn" id="scroll-btn" onclick="scrollToTop()" style="display: none;"><i
+                class="fa-solid fa-arrow-up"></i></button>
+    </div>
+
+    <!-- Core interactive client script -->
+    <script>
+        // ── State ─────────────────────────────────────────────────────────────
+        // Seeded category list used for immediate sidebar/dropdown render before API responds
+        const SEED_CATEGORIES = [
+            { id: "cat-homemade", title: "Homemade Anal", slug: "homemade-anal", count: "1.21M", char: "H" },
+            { id: "cat-skinny", title: "Skinny Teen Anal", slug: "skinny-teen-anal", count: "3.01M", char: "S" },
+            { id: "cat-mom", title: "Mom Anal", slug: "mom-anal", count: "3.32M", char: "M" },
+            { id: "cat-teen", title: "Teen Anal Sex", slug: "teen-anal-sex", count: "2.51M", char: "T" },
+            { id: "cat-bigass", title: "Big Ass Anal", slug: "big-ass-anal", count: "4.07M", char: "B" },
+            { id: "cat-three", title: "Threesome Anal", slug: "threesome-anal", count: "1.52M", char: "T" },
+            { id: "cat-hardcore", title: "Hardcore Anal", slug: "hardcore-anal", count: "4.01M", char: "H" },
+            { id: "cat-amateur", title: "Amateur Anal", slug: "amateur-anal", count: "3.9M", char: "A" },
+            { id: "cat-extreme", title: "Anal Extreme", slug: "anal-extreme", count: "1.4M", char: "A" },
+            { id: "cat-mature", title: "Mature Anal", slug: "mature-anal", count: "1.35M", char: "M" },
+            { id: "cat-bigtits", title: "Big Tits Anal", slug: "big-tits-anal", count: "3.9M", char: "B" },
+            { id: "cat-first", title: "First Anal", slug: "first-anal", count: "11.4M", char: "F" },
+            { id: "cat-asian", title: "Asian Anal", slug: "asian-anal", count: "841K", char: "A" },
+            { id: "cat-ebony", title: "Ebony Anal", slug: "ebony-anal", count: "1.86M", char: "E" },
+            { id: "cat-pov", title: "Anal POV", slug: "pov-anal", count: "1.38M", char: "A" },
+            { id: "cat-double", title: "Double Anal", slug: "double-anal", count: "272K", char: "D" },
+            { id: "cat-creampie", title: "Anal Creampie", slug: "anal-creampie", count: "492K", char: "A" },
+            { id: "cat-vintage", title: "Vintage Anal", slug: "vintage-anal", count: "177K", char: "V" },
+            { id: "cat-surprise", title: "Anal Surprise", slug: "anal-surprise", count: "99.3K", char: "A" }
+        ];
+
+        // Live data loaded from the API
+        let liveCategories = [...SEED_CATEGORIES]; // upgraded when /api/categories responds
+        let livePornstars = [];                   // loaded from /api/pornstars
+        let categoryThumbs = {};                   // loaded from /api/thumbs
+
+        // Active state
+        let currentMode = "categories"; // "categories" | "videos"
+        let currentSource = null;         // { type: 'listing'|'category'|'slug'|'search'|'pornstar', value, label }
+        let currentPage = 1;
+        let searchQuery = "";
+        let letterFilter = "";
+        let activeOrientation = 'all';
+        let activePricing = 'all';
+        const pendingThumbLoads = new Set();
+        let visibleThumbTimer = null;
+
+        // ── Bootstrap ─────────────────────────────────────────────────────────
+        window.addEventListener('DOMContentLoaded', () => {
+            checkAgeVerification();
+            buildNavDropdowns();    // immediate with seed data
+            buildSidebar();
+            buildTagPills();
+            renderCategoryGrid();
+
+            // Kick off background API loads
+            loadLiveCategories();
+            loadLivePornstars();
+            loadCategoryThumbs();
+
+            // Global click-outside handler
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.settings-group')) {
+                    document.querySelectorAll('.settings-dropdown-menu').forEach(m => m.style.display = 'none');
+                    document.querySelectorAll('.settings-btn').forEach(b => b.classList.remove('active'));
+                }
+                if (!e.target.closest('#desktop-search-container'))
+                    document.getElementById('autocomplete-suggestions')?.classList.remove('show');
+                if (!e.target.closest('#mobile-search-bar'))
+                    document.getElementById('mobile-autocomplete-suggestions')?.classList.remove('show');
+            });
+
+            window.addEventListener('scroll', () => {
+                const btn = document.getElementById('scroll-btn');
+                btn && (btn.style.display = window.scrollY > 400 ? 'flex' : 'none');
+                if (currentMode === 'categories') scheduleVisibleThumbLoad();
+            });
+        });
+
+        // ── Age verification ──────────────────────────────────────────────────
+        function checkAgeVerification() {
+            const modal = document.getElementById('splash-modal');
+            if (localStorage.getItem('age-verified') === 'true') {
+                modal.removeAttribute('open');
+                document.body.classList.remove('modal-open');
+            } else {
+                modal.setAttribute('open', '');
+                document.body.classList.add('modal-open');
+            }
+        }
+        function verifyAge() {
+            localStorage.setItem('age-verified', 'true');
+            document.getElementById('splash-modal').removeAttribute('open');
+            document.body.classList.remove('modal-open');
+        }
+
+        // ── Live meta loaders ─────────────────────────────────────────────────
+        async function loadLiveCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const cats = await res.json();
+                if (Array.isArray(cats) && cats.length > 0) {
+                    // Merge: map Sex Porn HD slugs into our ID scheme where possible
+                    const slugToId = {};
+                    SEED_CATEGORIES.forEach(c => { slugToId[c.slug] = c.id; });
+
+                    liveCategories = cats.map((c, i) => ({
+                        id: slugToId[c.slug] || `dyn-${i}`,
+                        slug: c.slug,
+                        title: c.title,
+                        count: c.count,
+                        char: c.title.charAt(0).toUpperCase()
+                    }));
+
+                    buildNavDropdowns();
+                    buildSidebar();
+                    // If still on category grid, refresh it with better data
+                    if (currentMode === 'categories') renderCategoryGrid();
+                }
+            } catch (e) { console.warn('Could not load live categories:', e); }
+        }
+
+        async function loadLivePornstars() {
+            try {
+                const res = await fetch('/api/pornstars');
+                const data = await res.json();
+                if (data && data.all) {
+                    livePornstars = data.all;
+                    buildNavDropdowns(); // refresh dropdown with real names
+                }
+            } catch (e) { console.warn('Could not load pornstars:', e); }
+        }
+
+        async function loadCategoryThumbs() {
+            try {
+                const res = await fetch('/api/thumbs');
+                const data = await res.json();
+                Object.assign(categoryThumbs, data);
+                if (currentMode === 'categories') applyThumbsToDOM(data);
+            } catch (e) { console.warn('Could not load thumbs:', e); }
+        }
+
+        // ── Nav / Sidebar builders ────────────────────────────────────────────
+        function buildNavDropdowns() {
+            // Categories dropdown (header + mobile)
+            const topCats = liveCategories.slice(0, 10);
+            const catHtml = topCats.map(c => `
+                <a class="dropdown-item" onclick="openSlug('${c.slug || c.id}','${c.title}')">
+                    ${c.title} <span class="badge">${c.count}</span>
+                </a>`).join('') +
+                `<a class="dropdown-item font-bold" onclick="resetToHome()" style="color:var(--accent-red);">All Categories</a>`;
+
+            const hdrCat = document.getElementById('header-categories-dropdown');
+            const mobCat = document.getElementById('mobile-categories-list');
+            if (hdrCat) hdrCat.innerHTML = catHtml;
+            if (mobCat) mobCat.innerHTML = liveCategories.map(c => `
+                <a class="accordion-item" onclick="openSlug('${c.slug || c.id}','${c.title}'); toggleDrawer(false);">${c.title}</a>`).join('');
+
+            // Pornstars dropdown
+            const stars = livePornstars.length > 0 ? livePornstars : [
+                { slug: 'freddy-gong', name: 'Freddy Gong' }, { slug: 'gabbie-carter', name: 'Gabbie Carter' },
+                { slug: 'stoya', name: 'Stoya' }, { slug: 'lily-phillips', name: 'Lily Phillips' },
+                { slug: 'austin-taylor', name: 'Austin Taylor' }, { slug: 'alice-romain', name: 'Alice Romain' },
+                { slug: 'veronica-leal', name: 'Veronica Leal' }, { slug: 'jane-wilde', name: 'Jane Wilde' }
+            ];
+            const starHtml = stars.slice(0, 12).map(s => `
+                <a class="dropdown-item" onclick="openPornstar('${s.slug}','${s.name}')">${s.name}</a>`).join('');
+            const hdrStars = document.getElementById('header-pornstars-dropdown');
+            const mobStars = document.getElementById('mobile-pornstars-list');
+            if (hdrStars) hdrStars.innerHTML = starHtml;
+            if (mobStars) mobStars.innerHTML = stars.map(s => `
+                <a class="accordion-item" onclick="openPornstar('${s.slug}','${s.name}'); toggleDrawer(false);">${s.name}</a>`).join('');
+        }
+
+        function buildSidebar() {
+            const sidebar = document.getElementById('sidebar-character-groups');
+            if (!sidebar) return;
+            const groups = {};
+            liveCategories.forEach(c => {
+                const ch = c.char || c.title.charAt(0).toUpperCase();
+                if (!groups[ch]) groups[ch] = [];
+                groups[ch].push(c);
+            });
+            const sorted = Object.keys(groups).sort();
+            sidebar.innerHTML = sorted.map(ch => `
+                <div class="sidebar-group">
+                    <div class="sidebar-group-key">${ch}</div>
+                    <div class="sidebar-group-links">
+                        ${groups[ch].map(c => `
+                            <a class="sidebar-link" onclick="openSlug('${c.slug || c.id}','${c.title}')">
+                                <span>${c.title}</span>
+                                <span class="badge">${c.count}</span>
+                            </a>`).join('')}
+                    </div>
+                </div>`).join('');
+        }
+
+        function buildTagPills() {
+            const pills = document.getElementById('tags-pills-list');
+            if (!pills) return;
+            if (currentMode === 'categories') {
+                const letters = [...new Set(liveCategories.map(c => c.char || c.title.charAt(0).toUpperCase()))].sort();
+                pills.innerHTML = `<button class="pill active" onclick="resetToHome()">All Categories</button>` +
+                    letters.map(l => `<button class="pill" onclick="filterByLetter('${l}')">${l}</button>`).join('');
+            } else {
+                pills.innerHTML = `<button class="pill" onclick="resetToHome()"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                    <button class="pill active">${currentSource?.label || 'Videos'}</button>`;
+            }
+        }
+
+        // ── Navigation actions (every clickable element) ──────────────────────
+
+        // Popular / New / Top rated (Videos menu) — loads in-page
+        function openListing(sort) {
+            const label = sort === 'new' ? 'New Videos' : sort === 'rating' ? 'Top Rated' : 'Popular Videos';
+            currentMode = 'videos';
+            currentSource = { type: 'listing', value: sort, label };
+            currentPage = 1;
+            document.getElementById('catalog-title').textContent = label;
+            buildTagPills();
+            renderVideoGrid();
+        }
+
+        // Category card or sidebar link by our local ID
+        function openCategory(id) {
+            const cat = liveCategories.find(c => c.id === id);
+            if (!cat) return;
+            currentMode = 'videos';
+            currentSource = { type: 'category', value: id, label: cat.title };
+            currentPage = 1;
+            document.getElementById('catalog-title').textContent = cat.title;
+            buildTagPills();
+            renderVideoGrid();
+        }
+
+        // Any category slug
+        function openSlug(slug, label) {
+            currentMode = 'videos';
+            currentSource = { type: 'slug', value: slug, label: label || slug };
+            currentPage = 1;
+            document.getElementById('catalog-title').textContent = label || slug;
+            buildTagPills();
+            renderVideoGrid();
+        }
+
+        // Pornstar page
+        function openPornstar(slug, name) {
+            currentMode = 'videos';
+            currentSource = { type: 'pornstar', value: slug, label: name || slug };
+            currentPage = 1;
+            document.getElementById('catalog-title').textContent = name || slug;
+            buildTagPills();
+            renderVideoGrid();
+        }
+
+        // Search — in-page video search
+        function triggerSearch(q) {
+            if (!q || !q.trim()) return;
+            currentMode = 'videos';
+            currentSource = { type: 'search', value: q.trim(), label: `Search: ${q.trim()}` };
+            currentPage = 1;
+            document.getElementById('catalog-title').textContent = `Search: ${q.trim()}`;
+            buildTagPills();
+            renderVideoGrid();
+        }
+
+        // Go home
+        function resetToHome() {
+            currentMode = 'categories';
+            currentSource = null;
+            currentPage = 1;
+            searchQuery = '';
+            letterFilter = '';
+            document.getElementById('search-query-input').value = '';
+            document.getElementById('mobile-search-query').value = '';
+            document.getElementById('catalog-title').textContent = 'Most Popular Categories';
+            removePagination();
+            renderCategoryGrid();
+            buildTagPills();
+        }
+
+        // Letter filter (pills on category page) — filter categories in-page
+        function filterByLetter(letter, evt) {
+            letterFilter = letter;
+            const pills = document.getElementById('tags-pills-list');
+            pills?.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+            evt?.target?.classList.add('active');
+            renderCategoryGrid();
+        }
+
+        // ── Category grid renderer ────────────────────────────────────────────
+        function renderCategoryGrid() {
+            const grid = document.getElementById('main-catalog-grid');
+            removePagination();
+
+            let cats = liveCategories;
+            if (letterFilter) cats = cats.filter(c => (c.char || c.title.charAt(0).toUpperCase()) === letterFilter);
+
+            document.getElementById('catalog-count').textContent = cats.length;
+            document.getElementById('catalog-meta').style.display = 'block';
+
+            if (cats.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dimmed);">
+                    <i class="fa-solid fa-video-slash" style="font-size:32px;color:var(--accent-red);margin-bottom:12px;"></i>
+                    <p>No categories found.</p></div>`;
+                return;
+            }
+
+            grid.innerHTML = cats.map(c => {
+                const thumb = categoryThumbs[c.id];
+                const imgSrc = thumb?.img || '';
+                return `
+                <div class="card" data-cat="${c.id}" onclick="openSlug('${c.slug || c.id}','${c.title}')">
+                    <div class="card-media-wrapper">
+                        <img class="card-image" src="${imgSrc}" alt="${c.title}" loading="lazy"
+                             style="${imgSrc ? 'opacity:0;transition:opacity 0.4s ease;' : 'display:none;opacity:0;transition:opacity 0.4s ease;'}"
+                             onload="this.style.opacity=1;this.nextElementSibling&&(this.nextElementSibling.style.display='none');"
+                             >
+                        <div class="card-placeholder" style="${imgSrc ? 'display:none;' : ''}position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);">
+                            <i class="fa-solid fa-play-circle" style="font-size:28px;color:rgba(255,255,255,0.2);"></i>
+                        </div>
+                        <span class="card-badge">${c.count}</span>
+                    </div>
+                    <div class="card-info">
+                        <h3 class="card-title">${c.title}</h3>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Load live thumbnails for cards currently in or near viewport.
+            scheduleVisibleThumbLoad();
+        }
+
+        function scheduleVisibleThumbLoad() {
+            clearTimeout(visibleThumbTimer);
+            visibleThumbTimer = setTimeout(() => {
+                loadVisibleCategoryThumbs().catch((e) => console.warn('Visible thumb loader failed:', e));
+            }, 120);
+        }
+
+        async function loadVisibleCategoryThumbs() {
+            const byId = new Map(liveCategories.map(c => [c.id, c]));
+            const cards = Array.from(document.querySelectorAll('#main-catalog-grid .card[data-cat]'));
+            if (cards.length === 0) return;
+
+            const viewportTop = window.scrollY - 200;
+            const viewportBottom = window.scrollY + window.innerHeight + 450;
+            const missing = [];
+
+            for (const card of cards) {
+                const id = card.getAttribute('data-cat');
+                if (!id) continue;
+                if (categoryThumbs[id] || pendingThumbLoads.has(id)) continue;
+
+                const rect = card.getBoundingClientRect();
+                const top = rect.top + window.scrollY;
+                const bottom = top + rect.height;
+                if (bottom < viewportTop || top > viewportBottom) continue;
+
+                const cat = byId.get(id);
+                if (!cat) continue;
+                missing.push(cat);
+                if (missing.length >= 18) break;
+            }
+
+            if (missing.length === 0) return;
+
+            await Promise.all(missing.map(async (c) => {
+                const slug = c.slug || c.id;
+                if (!slug) return;
+                pendingThumbLoads.add(c.id);
+                try {
+                    const r = await fetch(`/api/thumb?slug=${encodeURIComponent(slug)}`);
+                    const d = await r.json();
+                    if (d && d.img) {
+                        categoryThumbs[c.id] = d;
+                        applyThumbsToDOM({ [c.id]: d });
+                    }
+                } catch (e) {
+                    console.warn(`Could not load thumb for ${slug}:`, e);
+                } finally {
+                    pendingThumbLoads.delete(c.id);
+                }
+            }));
+        }
+
+        function applyThumbsToDOM(data) {
+            if (currentMode !== 'categories') return;
+            Object.entries(data).forEach(([catId, info]) => {
+                const card = document.querySelector(`.card[data-cat="${catId}"]`);
+                if (!card || !info.img) return;
+                const img = card.querySelector('.card-image');
+                const ph = card.querySelector('.card-placeholder');
+                if (!img) return;
+                img.style.opacity = '0';
+                img.style.transition = 'opacity 0.4s ease';
+                img.style.display = '';
+                img.src = info.img;
+                img.onload = () => { img.style.opacity = '1'; if (ph) ph.style.display = 'none'; };
+                img.onerror = () => { img.style.display = 'none'; };
+            });
+        }
+
+        // ── Video grid renderer ───────────────────────────────────────────────
+        async function renderVideoGrid() {
+            const grid = document.getElementById('main-catalog-grid');
+            removePagination();
+
+            grid.innerHTML = `
+                <div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-secondary);">
+                    <i class="fa-solid fa-circle-notch fa-spin" style="font-size:40px;margin-bottom:16px;color:var(--accent-red);"></i>
+                    <p style="font-size:15px;">Fetching live streams...</p>
+                </div>`;
+
+            let videos = [];
+            try {
+                let apiUrl;
+                const src = currentSource;
+                // Always fetch page 1 from API — we paginate client-side from the full result
+                if (!src) {
+                    apiUrl = `/api/listing?sort=popular&page=1`;
+                } else if (src.type === 'listing') {
+                    apiUrl = `/api/listing?sort=${encodeURIComponent(src.value)}&page=1`;
+                } else if (src.type === 'category') {
+                    apiUrl = `/api/category?id=${encodeURIComponent(src.value)}&page=1`;
+                } else if (src.type === 'slug') {
+                    apiUrl = `/api/slug?slug=${encodeURIComponent(src.value)}&page=1`;
+                } else if (src.type === 'search') {
+                    apiUrl = `/api/search?q=${encodeURIComponent(src.value)}&page=1`;
+                } else if (src.type === 'pornstar') {
+                    apiUrl = `/api/pornstar?slug=${encodeURIComponent(src.value)}&page=1`;
+                }
+
+                if (apiUrl) {
+                    const r = await fetch(apiUrl);
+                    const d = await r.json();
+                    if (d && d.videos) videos = d.videos;
+                }
+            } catch (e) { console.warn('Video fetch failed:', e); }
+
+            if (videos.length === 0) {
+                document.getElementById('catalog-count').textContent = '0';
+                document.getElementById('catalog-meta').style.display = 'block';
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dimmed);">
+                    <i class="fa-solid fa-video-slash" style="font-size:32px;color:var(--accent-red);margin-bottom:12px;"></i>
+                    <p>No videos found. Try a different category or search.</p></div>`;
+                renderPagination();
+                return;
+            }
+
+            const VIDEOS_PER_PAGE = 24;
+            const start = (currentPage - 1) * VIDEOS_PER_PAGE;
+            const pageVideos = videos.slice(start, start + VIDEOS_PER_PAGE);
+            const totalPages = Math.ceil(videos.length / VIDEOS_PER_PAGE);
+            window._currentPageVideos = videos; // cache for pagination without refetch
+            window._totalVideoPages = totalPages;
+
+            if (pageVideos.length === 0) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text-dimmed);">
+                    <i class="fa-solid fa-video-slash" style="font-size:32px;color:var(--accent-red);margin-bottom:12px;"></i>
+                    <p>No videos on this page. Try going back.</p></div>`;
+                renderPagination(totalPages);
+                return;
+            }
+
+            document.getElementById('catalog-count').textContent = videos.length;
+            document.getElementById('catalog-meta').style.display = 'block';
+
+            grid.innerHTML = pageVideos.map((v, idx) => {
+                const safeTitle = v.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                return `
+                <div class="card" onclick="openVideoModal('${encodeURIComponent(v.img)}','${safeTitle}','${encodeURIComponent(v.url || v.payload || '')}','${v.duration || ''}','${v.rating}')">
+                    <div class="card-media-wrapper">
+                        <img class="card-image" src="${v.img}" alt="${v.title}" loading="lazy">
+                        <div class="card-play-overlay"><i class="fa-solid fa-play"></i></div>
+                        <span class="card-badge" style="background:rgba(16,185,129,0.9);left:8px;right:auto;">
+                            <i class="fa-solid fa-thumbs-up"></i> ${v.rating}%
+                        </span>
+                        ${v.duration ? `<span class="card-badge">${v.duration}</span>` : ''}
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title" title="${v.title}">${v.title}</span>
+                    </div>
+                </div>`;
+            }).join('');
+
+            renderPagination(totalPages);
+        }
+
+        // ── Pagination ────────────────────────────────────────────────────────
+        function renderPagination(totalPages) {
+            removePagination();
+            if (currentMode !== 'videos') return;
+
+            const cachedVideos = window._currentPageVideos;
+            const tp = totalPages || window._totalVideoPages || 1;
+
+            const c = document.createElement('div');
+            c.id = 'pagination-controls';
+            c.className = 'pagination-controls';
+
+            // Build page number buttons (show up to 7 pages around current)
+            const pages = [];
+            const range = 3;
+            for (let p = 1; p <= tp; p++) {
+                if (p === 1 || p === tp || (p >= currentPage - range && p <= currentPage + range)) {
+                    pages.push(p);
+                } else if (pages[pages.length - 1] !== '...') {
+                    pages.push('...');
+                }
+            }
+
+            const prev = document.createElement('button');
+            prev.className = 'pill pagination-btn';
+            prev.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prev.disabled = currentPage <= 1;
+            prev.title = 'Previous page';
+            if (currentPage <= 1) prev.classList.add('disabled');
+            prev.onclick = () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    renderVideoFromCache();
+                    scrollToGrid();
+                }
+            };
+            c.append(prev);
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const dots = document.createElement('span');
+                    dots.className = 'pagination-dots';
+                    dots.textContent = '...';
+                    c.append(dots);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.className = 'pill pagination-btn' + (p === currentPage ? ' active' : '');
+                    btn.textContent = p;
+                    btn.onclick = () => { currentPage = p; renderVideoFromCache(); scrollToGrid(); };
+                    c.append(btn);
+                }
+            });
+
+            const next = document.createElement('button');
+            next.className = 'pill pagination-btn';
+            next.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            next.disabled = currentPage >= tp;
+            next.title = 'Next page';
+            if (currentPage >= tp) next.classList.add('disabled');
+            next.onclick = () => {
+                if (currentPage < tp) {
+                    currentPage++;
+                    renderVideoFromCache();
+                    scrollToGrid();
+                }
+            };
+            c.append(next);
+
+            document.getElementById('main-catalog-grid').after(c);
+        }
+
+        // Render from cache without re-fetching (for pagination within same result set)
+        function renderVideoFromCache() {
+            const videos = window._currentPageVideos;
+            if (!videos) { renderVideoGrid(); return; }
+            const grid = document.getElementById('main-catalog-grid');
+            removePagination();
+            const VIDEOS_PER_PAGE = 24;
+            const start = (currentPage - 1) * VIDEOS_PER_PAGE;
+            const pageVideos = videos.slice(start, start + VIDEOS_PER_PAGE);
+            const totalPages = Math.ceil(videos.length / VIDEOS_PER_PAGE);
+
+            document.getElementById('catalog-count').textContent = videos.length;
+            document.getElementById('catalog-meta').style.display = 'block';
+
+            grid.innerHTML = pageVideos.map(v => {
+                const safeTitle = v.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                return `
+                <div class="card" onclick="openVideoModal('${encodeURIComponent(v.img)}','${safeTitle}','${encodeURIComponent(v.url || v.payload || '')}','${v.duration || ''}','${v.rating}')">
+                    <div class="card-media-wrapper">
+                        <img class="card-image" src="${v.img}" alt="${v.title}" loading="lazy">
+                        <div class="card-play-overlay"><i class="fa-solid fa-play"></i></div>
+                        <span class="card-badge" style="background:rgba(16,185,129,0.9);left:8px;right:auto;">
+                            <i class="fa-solid fa-thumbs-up"></i> ${v.rating}%
+                        </span>
+                        ${v.duration ? `<span class="card-badge">${v.duration}</span>` : ''}
+                    </div>
+                    <div class="card-info">
+                        <span class="card-title" title="${v.title}">${v.title}</span>
+                    </div>
+                </div>`;
+            }).join('');
+            renderPagination(totalPages);
+        }
+
+        function removePagination() {
+            document.getElementById('pagination-controls')?.remove();
+        }
+
+        // ── Video Modal Player ─────────────────────────────────────────────────
+        function openVideoModal(encodedImg, title, encodedUrlOrPayload, duration, rating) {
+            const img = decodeURIComponent(encodedImg);
+            const urlOrPayload = decodeURIComponent(encodedUrlOrPayload);
+            const modal = document.getElementById('video-modal');
+            const player = document.getElementById('video-modal-player');
+            const titleEl = document.getElementById('video-modal-title');
+            const extLink = document.getElementById('video-modal-extlink');
+
+            titleEl.textContent = title;
+
+            // The server now resolves the payload to the actual destination URL.
+            // urlOrPayload is either a direct http(s) URL or a legacy payload string.
+            let externalUrl = '#';
+            if (urlOrPayload.startsWith('http://') || urlOrPayload.startsWith('https://')) {
+                externalUrl = urlOrPayload;
+            } else {
+                // Legacy fallback: try atob decode
+                try {
+                    const decoded = atob(urlOrPayload.replace(/-/g,'+').replace(/_/g,'/'));
+                    if (decoded.startsWith('http')) externalUrl = decoded;
+                } catch(e) { /* ignore */ }
+            }
+
+            extLink.href = externalUrl;
+
+            // Since direct embed may be blocked by X-Frame-Options, show thumbnail preview + play button
+            player.innerHTML = `
+                <div class="video-thumb-player">
+                    <img src="${img}" alt="${title}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                    <div class="video-thumb-overlay">
+                        <div class="video-meta-info">
+                            ${duration ? `<span class="vbadge"><i class="fa-solid fa-clock"></i> ${duration}</span>` : ''}
+                            <span class="vbadge green"><i class="fa-solid fa-thumbs-up"></i> ${rating}%</span>
+                        </div>
+                        <a href="${externalUrl}" target="_blank" rel="noopener noreferrer" class="play-btn-big">
+                            <i class="fa-solid fa-play"></i>
+                        </a>
+                        <p class="play-hint">Click to watch on source site</p>
+                    </div>
+                </div>`;
+
+            modal.classList.add('open');
+            document.body.classList.add('modal-open');
+        }
+
+        function closeVideoModal(evt, force) {
+            if (!force && evt && evt.target !== document.getElementById('video-modal')) return;
+            document.getElementById('video-modal').classList.remove('open');
+            document.getElementById('video-modal-player').innerHTML = '';
+            document.body.classList.remove('modal-open');
+        }
+
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeVideoModal(null, true);
+        });
+
+        // ── Search ────────────────────────────────────────────────────────────
+        function handleSearchInput(val, isMobile) {
+            searchQuery = val.toLowerCase().trim();
+            const suggestId = isMobile ? 'mobile-autocomplete-suggestions' : 'autocomplete-suggestions';
+            const suggest = document.getElementById(suggestId);
+
+            // Autocomplete on categories
+            if (searchQuery.length < 2) { suggest?.classList.remove('show'); return; }
+
+            const matchCats = liveCategories.filter(c => c.title.toLowerCase().includes(searchQuery)).slice(0, 4);
+            const matchStars = livePornstars.filter(s => s.name.toLowerCase().includes(searchQuery)).slice(0, 3);
+
+            let html = '';
+            if (matchCats.length) {
+                html += `<div class="autocomplete-group-header">Categories</div>`;
+                html += matchCats.map(c => `
+                    <div class="autocomplete-item" onclick="openSlug('${c.slug || c.id}','${c.title}'); clearSearchBoxes();">
+                        <i class="fa-solid fa-folder-open"></i> <span>${c.title}</span>
+                    </div>`).join('');
+            }
+            if (matchStars.length) {
+                html += `<div class="autocomplete-group-header">Pornstars</div>`;
+                html += matchStars.map(s => `
+                    <div class="autocomplete-item" onclick="openPornstar('${s.slug}','${s.name}'); clearSearchBoxes();">
+                        <i class="fa-solid fa-star"></i> <span>${s.name}</span>
+                    </div>`).join('');
+            }
+
+            if (html) {
+                suggest.innerHTML = html + `
+                    <div class="autocomplete-item" onclick="triggerSearch('${searchQuery}'); clearSearchBoxes();" style="border-top:1px solid rgba(255,255,255,0.05);margin-top:4px;padding-top:8px;">
+                        <i class="fa-solid fa-magnifying-glass"></i> <span>Search videos for "<strong>${searchQuery}</strong>"</span>
+                    </div>`;
+                suggest.classList.add('show');
+            } else {
+                suggest.classList.remove('show');
+            }
+            // No auto-redirect while typing — the click on a suggestion (or Enter)
+            // is what routes out to analgalore.com, so typing never spawns tabs.
+        }
+
+        // Enter in either search box submits the query (clickable/submit path).
+        function handleSearchSubmit(evt, val) {
+            if (evt.key !== 'Enter') return;
+            evt.preventDefault();
+            triggerSearch(val);
+        }
+
+        function clearSearchBoxes() {
+            document.getElementById('search-query-input').value = '';
+            document.getElementById('mobile-search-query').value = '';
+            document.getElementById('autocomplete-suggestions')?.classList.remove('show');
+            document.getElementById('mobile-autocomplete-suggestions')?.classList.remove('show');
+        }
+
+        function setSearchQuery(val) { // Legacy support for inline onclick
+            document.getElementById('search-query-input').value = val;
+            triggerSearch(val);
+        }
+
+        // ── Drawer / Accordion ────────────────────────────────────────────────
+        function toggleDrawer(show) {
+            const drawer = document.getElementById('navigation-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            drawer.classList.toggle('open', show);
+            overlay.classList.toggle('show', show);
+        }
+
+        function toggleAccordion(id) {
+            document.getElementById(id)?.classList.toggle('open');
+        }
+
+        function toggleMobileSearch() {
+            const bar = document.getElementById('mobile-search-bar');
+            if (bar.style.display === 'none') {
+                bar.style.display = 'block';
+                bar.querySelector('input')?.focus();
+            } else {
+                bar.style.display = 'none';
+            }
+        }
+
+        // ── Settings dropdowns ────────────────────────────────────────────────
+        function toggleSettingsGroup(id, evt) {
+            const e = evt || window.event;
+            e?.stopPropagation?.();
+            const menu = document.getElementById(id).querySelector('.settings-dropdown-menu');
+            const btn = document.getElementById(id).querySelector('.settings-btn');
+            const wasOpen = menu.style.display === 'block';
+            document.querySelectorAll('.settings-dropdown-menu').forEach(m => m.style.display = 'none');
+            document.querySelectorAll('.settings-btn').forEach(b => b.classList.remove('active'));
+            if (!wasOpen) { menu.style.display = 'block'; btn.classList.add('active'); }
+        }
+
+        function setOrientation(value, el) {
+            activeOrientation = value;
+            if (el) updateSettingsActive(el);
+            triggerSettingsSearch();
+        }
+
+        function setPricing(value, el) {
+            activePricing = value;
+            if (el) updateSettingsActive(el);
+            triggerSettingsSearch();
+        }
+
+        function updateSettingsActive(el) {
+            const menu = el.closest('.settings-dropdown-menu');
+            menu?.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function triggerSettingsSearch() {
+            const terms = [];
+            if (activeOrientation !== 'all') terms.push(activeOrientation);
+            if (activePricing === 'free') terms.push('free');
+            if (activePricing === 'premium') terms.push('premium');
+
+            if (terms.length === 0) {
+                openListing('popular');
+                return;
+            }
+
+            triggerSearch(`${terms.join(' ')} anal`);
+        }
+
+        function toggleThumbnailSize(checked) {
+            document.body.classList.toggle('large-thumbs', checked);
+        }
+
+        // ── Misc helpers ──────────────────────────────────────────────────────
+        function scrollToGrid() {
+            document.getElementById('main-catalog-grid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Legacy shims (called from inline HTML onclick attributes)
+        function selectCategory(id) { openCategory(id); }
+        function setVideoSort(sort) { openListing(sort); }
+    </script>
+</body>
+
+</html>
