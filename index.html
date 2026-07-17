@@ -236,15 +236,31 @@
         <!-- Top Leaderboard Ad Banner (between header and content) -->
         <div class="ad-leaderboard-wrapper" id="ad-top-leaderboard">
             <div class="ad-label">Advertisement</div>
-            <div class="ad-slot ad-leaderboard">
-                <!-- Google AdSense Leaderboard 728x90 -->
-                <!-- Replace this div with your AdSense <ins> tag -->
-                <!-- <ins class="adsbygoogle" style="display:inline-block;width:728px;height:90px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
-                <div class="ad-placeholder-inner">
-                    <i class="fa-solid fa-rectangle-ad"></i>
-                    <span>Ad Space &mdash; 728 &times; 90 Leaderboard</span>
-                    <span class="ad-size-hint">Google AdSense Ready</span>
-                </div>
+            <!-- Desktop Leaderboard (728x90) -->
+            <div class="ad-slot ad-leaderboard mobile-hidden">
+                <script>
+                    atOptions = {
+                        'key' : '706391201d37146b3f5648b9f60cc563',
+                        'format' : 'iframe',
+                        'height' : 90,
+                        'width' : 728,
+                        'params' : {}
+                    };
+                </script>
+                <script src="https://www.highperformanceformat.com/706391201d37146b3f5648b9f60cc563/invoke.js"></script>
+            </div>
+            <!-- Mobile Leaderboard (320x50) -->
+            <div class="ad-slot ad-mobile-leaderboard desktop-hidden">
+                <script>
+                    atOptions = {
+                        'key' : '6296b31152b76c8eb8736eee3f7432ed',
+                        'format' : 'iframe',
+                        'height' : 50,
+                        'width' : 320,
+                        'params' : {}
+                    };
+                </script>
+                <script src="https://www.highperformanceformat.com/6296b31152b76c8eb8736eee3f7432ed/invoke.js"></script>
             </div>
         </div>
 
@@ -269,24 +285,32 @@
 
                 <!-- Left Ad Rail (desktop only) -->
                 <aside class="ad-rail ad-rail-left mobile-hidden" id="ad-rail-left">
-                    <!-- Google AdSense Skyscraper 160x600 -->
                     <div class="ad-label">Ad</div>
+                    <!-- Skyscraper (160x600) -->
                     <div class="ad-slot ad-skyscraper">
-                        <!-- Replace with AdSense <ins> tag -->
-                        <!-- <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
-                        <div class="ad-placeholder-inner vertical">
-                            <i class="fa-solid fa-rectangle-ad"></i>
-                            <span>160&times;600</span>
-                            <span class="ad-size-hint">Wide Skyscraper</span>
-                        </div>
+                        <script>
+                            atOptions = {
+                                'key' : 'fbcbdb2eff3398fdb549b7484177176a',
+                                'format' : 'iframe',
+                                'height' : 600,
+                                'width' : 160,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/fbcbdb2eff3398fdb549b7484177176a/invoke.js"></script>
                     </div>
-                    <!-- Second smaller ad slot -->
+                    <!-- Medium Rectangle (300x250) -->
                     <div class="ad-slot ad-square" style="margin-top:20px;">
-                        <div class="ad-placeholder-inner vertical">
-                            <i class="fa-solid fa-rectangle-ad"></i>
-                            <span>300&times;250</span>
-                            <span class="ad-size-hint">Medium Rectangle</span>
-                        </div>
+                        <script>
+                            atOptions = {
+                                'key' : 'ea92ef6e3159844ad092369efe6f02ed',
+                                'format' : 'iframe',
+                                'height' : 250,
+                                'width' : 300,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/ea92ef6e3159844ad092369efe6f02ed/invoke.js"></script>
                     </div>
                 </aside>
 
@@ -313,6 +337,12 @@
                         <div class="cards-grid" id="main-catalog-grid">
                             <!-- Populated dynamically -->
                         </div>
+
+                        <!-- Dynamic Native Recommendation Widget (Adsterra) -->
+                        <div class="native-ad-widget-container" style="margin: 24px 0; width: 100%;">
+                            <script async="async" data-cfasync="false" src="https://pl30412496.effectivecpmnetwork.com/8d23cadd0711f190c1e11b03a64021b8/invoke.js"></script>
+                            <div id="container-8d23cadd0711f190c1e11b03a64021b8"></div>
+                        </div>
                     </section>
 
                     <!-- Right Sidebar List grouped by starting characters -->
@@ -320,13 +350,16 @@
                         <div class="sidebar-ad-slot">
                             <div class="ad-label">Ad</div>
                             <div class="ad-slot ad-square">
-                                <!-- Google AdSense 300x250 -->
-                                <!-- <ins class="adsbygoogle" style="display:inline-block;width:300px;height:250px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
-                                <div class="ad-placeholder-inner vertical">
-                                    <i class="fa-solid fa-rectangle-ad"></i>
-                                    <span>300&times;250</span>
-                                    <span class="ad-size-hint">Medium Rectangle</span>
-                                </div>
+                                <script>
+                                    atOptions = {
+                                        'key' : 'ea92ef6e3159844ad092369efe6f02ed',
+                                        'format' : 'iframe',
+                                        'height' : 250,
+                                        'width' : 300,
+                                        'params' : {}
+                                    };
+                                </script>
+                                <script src="https://www.highperformanceformat.com/ea92ef6e3159844ad092369efe6f02ed/invoke.js"></script>
                             </div>
                         </div>
                         <h3 class="sidebar-title" style="margin-top:20px;">Popular Directories</h3>
@@ -348,21 +381,31 @@
                 <!-- Right Ad Rail (desktop only) -->
                 <aside class="ad-rail ad-rail-right mobile-hidden" id="ad-rail-right">
                     <div class="ad-label">Ad</div>
+                    <!-- Skyscraper (160x600) -->
                     <div class="ad-slot ad-skyscraper">
-                        <!-- Replace with AdSense <ins> tag -->
-                        <!-- <ins class="adsbygoogle" style="display:inline-block;width:160px;height:600px" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX"></ins> -->
-                        <div class="ad-placeholder-inner vertical">
-                            <i class="fa-solid fa-rectangle-ad"></i>
-                            <span>160&times;600</span>
-                            <span class="ad-size-hint">Wide Skyscraper</span>
-                        </div>
+                        <script>
+                            atOptions = {
+                                'key' : 'fbcbdb2eff3398fdb549b7484177176a',
+                                'format' : 'iframe',
+                                'height' : 600,
+                                'width' : 160,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/fbcbdb2eff3398fdb549b7484177176a/invoke.js"></script>
                     </div>
+                    <!-- Medium Rectangle (300x250) -->
                     <div class="ad-slot ad-square" style="margin-top:20px;">
-                        <div class="ad-placeholder-inner vertical">
-                            <i class="fa-solid fa-rectangle-ad"></i>
-                            <span>300&times;250</span>
-                            <span class="ad-size-hint">Medium Rectangle</span>
-                        </div>
+                        <script>
+                            atOptions = {
+                                'key' : 'ea92ef6e3159844ad092369efe6f02ed',
+                                'format' : 'iframe',
+                                'height' : 250,
+                                'width' : 300,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/ea92ef6e3159844ad092369efe6f02ed/invoke.js"></script>
                     </div>
                 </aside>
 
@@ -386,11 +429,31 @@
                 </div>
                 <div class="video-modal-ad">
                     <div class="ad-label">Ad</div>
-                    <div class="ad-slot ad-leaderboard">
-                        <div class="ad-placeholder-inner">
-                            <i class="fa-solid fa-rectangle-ad"></i>
-                            <span>728&times;90 &mdash; Leaderboard Ad</span>
-                        </div>
+                    <!-- Desktop Video Modal Ad (728x90) -->
+                    <div class="ad-slot ad-leaderboard mobile-hidden">
+                        <script>
+                            atOptions = {
+                                'key' : '706391201d37146b3f5648b9f60cc563',
+                                'format' : 'iframe',
+                                'height' : 90,
+                                'width' : 728,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/706391201d37146b3f5648b9f60cc563/invoke.js"></script>
+                    </div>
+                    <!-- Mobile/Tablet Video Modal Ad (468x60) -->
+                    <div class="ad-slot ad-tablet-leaderboard desktop-hidden">
+                        <script>
+                            atOptions = {
+                                'key' : '4a49d14c6e857ca46740887d05bfb6bf',
+                                'format' : 'iframe',
+                                'height' : 60,
+                                'width' : 468,
+                                'params' : {}
+                            };
+                        </script>
+                        <script src="https://www.highperformanceformat.com/4a49d14c6e857ca46740887d05bfb6bf/invoke.js"></script>
                     </div>
                 </div>
             </div>
@@ -1252,6 +1315,8 @@
         function selectCategory(id) { openCategory(id); }
         function setVideoSort(sort) { openListing(sort); }
     </script>
+    <!-- Adsterra Popunder / Social Bar Script -->
+    <script src="https://pl30412493.effectivecpmnetwork.com/52/1d/5c/521d5cb1785cadb690d69cd9f7a13aba.js"></script>
 </body>
 
 </html>

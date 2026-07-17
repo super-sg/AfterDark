@@ -1455,4 +1455,29 @@ dialog.modal[open] {
     .video-modal-box {
         max-height: 95vh;
     }
+    .catalog-layout {
+        grid-template-columns: 1fr;
+    }
+    .mobile-hidden {
+        display: none !important;
+    }
+    .desktop-hidden {
+        display: flex !important;
+    }
+}
+
+.desktop-hidden {
+    display: none !important;
+}
+
+.ad-mobile-leaderboard {
+    width: 100%;
+    max-width: 320px;
+    min-height: 50px;
+}
+
+.ad-tablet-leaderboard {
+    width: 100%;
+    max-width: 468px;
+    min-height: 60px;
 }
