@@ -2481,7 +2481,9 @@ document.addEventListener('click', async (event) => {
     return;
   }
 
-  const revealBtn = target.closest('[data-reveal]');
+  // Scoped to the button: a bare [data-reveal] once matched every post card
+  // and swallowed every click in the feed.
+  const revealBtn = target.closest('button[data-reveal]');
   if (revealBtn) {
     event.preventDefault();
     event.stopPropagation();

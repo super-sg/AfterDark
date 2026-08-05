@@ -3529,12 +3529,12 @@ html { scroll-behavior: smooth; }
 
 /* Rows rise as they arrive. Small on purpose — a long slide on every post is
    nauseating by the fifth screen, and this has to survive infinite scroll. */
-[data-reveal] {
+[data-enter] {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.42s var(--ease-out), transform 0.42s var(--ease-out);
 }
-[data-reveal][data-revealed='true'] { opacity: 1; transform: none; }
+[data-enter][data-entered='true'] { opacity: 1; transform: none; }
 
 .topbar {
   transition: transform 0.26s var(--ease-out), box-shadow 0.2s var(--ease),
@@ -3559,7 +3559,7 @@ html { scroll-behavior: smooth; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  [data-reveal] { opacity: 1; transform: none; }
+  [data-enter] { opacity: 1; transform: none; }
   .topbar[data-hidden='true'] { transform: none; }
 }
 

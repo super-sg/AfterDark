@@ -11,6 +11,12 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
  * Rows rise a few pixels as they come into view. Deliberately restrained: a
  * long slide on every post is nauseating by the fifth screen, and this has to
  * survive infinite scroll.
+ *
+ * The attribute is `data-enter`, not `data-reveal`: the click handler in
+ * app.js owns `[data-reveal]` for the explicit-image gate, and stamping the
+ * same name on every post made `target.closest('[data-reveal]')` match the
+ * whole card — so every click anywhere in a post was swallowed by the gate
+ * branch and no post ever opened.
  */
 let revealObserver = null;
 
@@ -21,14 +27,14 @@ export function observeReveals(root = document) {
     revealObserver = new IntersectionObserver((entries) => {
       for (const entry of entries) {
         if (!entry.isIntersecting) continue;
-        entry.target.dataset.revealed = 'true';
+        entry.target.dataset.entered = 'true';
         revealObserver.unobserve(entry.target);
       }
     }, { rootMargin: '0px 0px -6% 0px', threshold: 0.02 });
   }
 
-  for (const el of root.querySelectorAll('.post:not([data-reveal]), .comm:not([data-reveal]), .tile:not([data-reveal]), .newscard:not([data-reveal])')) {
-    el.dataset.reveal = 'true';
+  for (const el of root.querySelectorAll('.post:not([data-enter]), .comm:not([data-enter]), .tile:not([data-enter]), .newscard:not([data-enter])')) {
+    el.dataset.enter = 'true';
     revealObserver.observe(el);
   }
 }
