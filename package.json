@@ -1,0 +1,28 @@
+{
+  "name": "afterdark",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AfterDark — a Reddit-style discussion community and newsroom for the adult industry.",
+  "type": "commonjs",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "dev": "CLUSTER=0 node --watch server.js",
+    "seed": "node scripts/seed.js",
+    "wire": "node scripts/fetch-wire.js",
+    "loadtest": "node scripts/loadtest.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "compression": "^1.7.5",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "sharp": "^0.35.3"
+  }
+}

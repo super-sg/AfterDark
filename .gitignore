@@ -1,14 +1,8 @@
-# Dependency directories
 node_modules/
-
-# OS metadata
-.DS_Store
-
-# IDE directories
-.vscode/
-.idea/
-.agents/
-
-# Local env files
+data/
+*.db
+*.db-wal
+*.db-shm
 .env
-.env.local
+.DS_Store
+npm-debug.log*

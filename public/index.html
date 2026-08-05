@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>AfterDark — adult industry discussion & newsroom</title>
+    <meta
+      name="description"
+      content="A discussion community and newsroom covering the adult industry: policy, labour, platforms, money and technology. Adults only."
+    />
+    <meta name="rating" content="RTA-5042-1996-1400-1577-RTA" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" id="theme-color" content="#000000" />
+    <!-- Before the stylesheet: applies the stored theme ahead of first paint. -->
+    <script src="/js/theme.js"></script>
+    <link rel="stylesheet" href="/css/app.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23000'/%3E%3Cpath d='M8 23 14.2 9h3.6L24 23h-3.4l-1.2-3h-6.8l-1.2 3Zm5.7-5.6h4.6L16 11.9Z' fill='%2339ff88'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <!-- Age interstitial. Rendered server-agnostic; script decides visibility. -->
+    <div id="age-gate" class="age-gate" hidden>
+      <div class="age-gate__panel" role="dialog" aria-modal="true" aria-labelledby="age-gate-title">
+        <div class="brand brand--lg" aria-hidden="true">
+          <span class="brand__mark">AD</span>
+        </div>
+        <h1 id="age-gate-title">This site is for adults</h1>
+        <p>
+          AfterDark is a discussion community and newsroom about the adult entertainment industry.
+          It is written for an adult audience and discusses sexual content, though it hosts no
+          explicit media of any kind.
+        </p>
+        <ul class="age-gate__rules">
+          <li>You must be 18 or older — 21 where your jurisdiction requires it.</li>
+          <li>Sexual content involving minors is prohibited absolutely and reported.</li>
+          <li>No non-consensual material, and no personal information about anyone.</li>
+        </ul>
+        <div class="age-gate__actions">
+          <button class="btn btn--primary btn--lg" id="age-accept">I am 18 or older — enter</button>
+          <a class="btn btn--ghost btn--lg" href="https://www.google.com" id="age-decline" rel="noopener">Leave</a>
+        </div>
+        <p class="age-gate__legal" id="age-gate-legal"></p>
+      </div>
+    </div>
+
+    <div class="read-progress" id="read-progress" aria-hidden="true"></div>
+
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a class="brand" href="/" data-link>
+          <span class="brand__mark">AD</span>
+          <span class="brand__word">AfterDark</span>
+        </a>
+
+        <form class="search" id="search-form" role="search">
+          <svg
+            class="search__icon ico"
+            viewBox="0 0 24 24"
+            width="17"
+            height="17"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            aria-hidden="true"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.6-3.6" />
+          </svg>
+          <input
+            type="search"
+            id="search-input"
+            name="q"
+            placeholder="Search threads and reporting  —  press /"
+            autocomplete="off"
+            aria-label="Search"
+          />
+        </form>
+
+        <button class="icon-btn theme-toggle" id="theme-toggle" aria-label="Switch between light and dark" title="Switch theme">
+          <svg class="theme-toggle__sun ico" viewBox="0 0 24 24" width="18" height="18" fill="none"
+               stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4.2" />
+            <path d="M12 2.6v2.2M12 19.2v2.2M21.4 12h-2.2M4.8 12H2.6M18.6 5.4l-1.6 1.6M7 17l-1.6 1.6M18.6 18.6 17 17M7 7 5.4 5.4" />
+          </svg>
+          <svg class="theme-toggle__moon ico" viewBox="0 0 24 24" width="18" height="18" fill="none"
+               stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 14.2A8.2 8.2 0 0 1 9.8 4a8.5 8.5 0 1 0 10.2 10.2Z" />
+          </svg>
+        </button>
+
+        <nav class="topbar__nav" id="topbar-nav" aria-label="Account"></nav>
+
+        <button class="icon-btn topbar__menu" id="menu-toggle" aria-label="Open navigation" aria-expanded="false">
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
+      <div class="ticker" id="ticker" hidden>
+        <span class="ticker__label">Live wire</span>
+        <div class="ticker__viewport">
+          <div class="ticker__track" id="ticker-track"></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="rail rail--left" id="rail-left" aria-label="Boards"></aside>
+      <main class="content" id="view" tabindex="-1"></main>
+      <aside class="rail rail--right" id="rail-right" aria-label="Site information"></aside>
+    </div>
+
+    <div class="footer-ad" id="footer-ad"></div>
+
+    <footer class="footer">
+      <div class="footer__inner">
+        <p>
+          <strong>AfterDark</strong> — discussion and reporting about the adult industry. No explicit
+          media is hosted here.
+        </p>
+        <p class="footer__legal" id="footer-legal"></p>
+        <p class="footer__links">
+          <a href="/b/meta" data-link>Rules</a>
+          <a href="/b/meta" data-link>Appeals</a>
+          <a href="https://www.rtalabel.org" rel="noopener nofollow">RTA label</a>
+          <a href="https://www.missingkids.org/gethelpnow/cybertipline" rel="noopener nofollow">Report child exploitation</a>
+        </p>
+      </div>
+    </footer>
+
+    <div class="toasts" id="toasts" aria-live="polite" aria-atomic="false"></div>
+    <div class="modal-root" id="modal-root"></div>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>
