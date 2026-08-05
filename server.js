@@ -62,6 +62,13 @@ function startWorker() {
 
   // Reconcile the declared source registry with the database on boot, so a new
   // source in src/sources.js is live after a restart with no migration step.
+  // A cold start on an ephemeral filesystem means an empty database. Seed it
+  // before anything serves, and only from the scheduler worker so eight of them
+  // do not race each other through the same INSERTs.
+  if (process.env.WORKER_INDEX === '0' || WORKERS === 1) {
+    require('./src/bootstrap').seedIfEmpty();
+  }
+
   require('./src/sources').syncBuiltins();
   require('./src/sites').seed();
 

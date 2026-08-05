@@ -1,0 +1,13 @@
+node_modules
+data
+.git
+.env
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+npm-debug.log*
+index.html
+index.css
+out
+*.png

@@ -1,0 +1,43 @@
+# Fly.io. Deploy with:
+#   fly launch --no-deploy        (once, to create the app)
+#   fly volumes create afterdark_data --size 10
+#   fly secrets set SESSION_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
+#   fly deploy
+
+app = "afterdark"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  NODE_ENV = "production"
+  DB_PATH = "/data/afterdark.db"
+  IMAGE_CACHE_DIR = "/data/imgcache"
+  TRUST_PROXY = "1"
+  CLUSTER = "2"
+  ADMIN_USERS = "admin"
+
+# SQLite is a file. One writer, one machine — do not scale this past a single
+# instance without moving to a replicated store first, or two machines will
+# happily corrupt each other's writes.
+[[mounts]]
+  source = "afterdark_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false     # scheduled wire pulls need the process alive
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 400
+    hard_limit = 600
+
+[[vm]]
+  size = "shared-cpu-2x"
+  memory = "1gb"

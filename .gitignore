@@ -6,3 +6,6 @@ data/
 .env
 .DS_Store
 npm-debug.log*
+
+# Screenshots dropped in the project root while working.
+Screenshot*.png

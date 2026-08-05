@@ -1,0 +1,44 @@
+# Render blueprint.  Repo → New > Blueprint → pick this repo → Apply.
+#
+# This is configured for the FREE plan, which has two consequences worth being
+# clear about rather than discovering later:
+#
+#   1. No persistent disk. The SQLite file lives on the container's ephemeral
+#      filesystem, so it is wiped on every redeploy and every wake-from-sleep.
+#      The app reseeds itself on an empty boot (src/bootstrap.js), so the site
+#      always works — but accounts, posts and comments do not survive.
+#   2. Free services sleep after ~15 minutes idle and take 30–60s to wake.
+#      The scheduled wire pulls only run while the service is awake.
+#
+# To make it a real site, change `plan: free` to `plan: starter` and uncomment
+# the disk block. That is the only difference; nothing in the code changes.
+services:
+  - type: web
+    name: afterdark
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+
+    # --- uncomment together with `plan: starter` for a durable database -----
+    # disk:
+    #   name: afterdark-data
+    #   mountPath: /data
+    #   sizeGB: 10
+
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true      # Render generates and stores it; never in git
+      # /tmp is writable on Render and lives as long as the container does.
+      # Change both to /data/... when you attach the disk above.
+      - key: DB_PATH
+        value: /tmp/afterdark.db
+      - key: IMAGE_CACHE_DIR
+        value: /tmp/imgcache
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"               # Render terminates TLS in front of the app
+      - key: CLUSTER
+        value: "1"               # free plan is 0.1 CPU; one worker, not eight
+      - key: ADMIN_USERS
+        value: admin
