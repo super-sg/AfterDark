@@ -154,6 +154,18 @@ async function ingest({ only = null, log = () => {} } = {}) {
       continue;
     }
 
+    // A fetch can succeed and still yield nothing usable — a publisher that
+    // retires RSS often leaves the URL serving an HTML landing page. Calling
+    // that "ok" hides a dead source behind a green tick indefinitely.
+    if (!items.length) {
+      const reason = 'fetched, but no items could be parsed (the feed has probably been retired)';
+      summary.errors.push({ source: s.name, id: s.id, url: s.url, error: reason });
+      summary.perSource.push({ id: s.id, name: s.name, kind: s.kind, status: 'empty', error: reason, seen: 0, added: 0 });
+      sources.report(s.id, { status: 'empty', error: reason });
+      log(`✗ ${s.name}: ${reason}`);
+      continue;
+    }
+
     const board = boardFor(s.board);
     if (!board) {
       const reason = `target board "${s.board}" missing — run \`npm run seed\``;

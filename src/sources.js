@@ -81,22 +81,23 @@ const BUILTIN = [
   {
     id: 'xbiz', name: 'XBIZ', adapter: 'rss', kind: 'news',
     url: 'https://www.xbiz.com/rss/', board: 'business', nsfw: false,
-    enabled: true, verified: false, note: 'blocked by network filter on dev machine',
+    enabled: false, verified: false,
+    note: 'XBIZ retired RSS — /rss/ serves HTML and every other path 404s. Left here so it is not rediscovered as a good idea.',
   },
   {
     id: 'xbiz-newswire', name: 'XBIZ Newswire', adapter: 'rss', kind: 'news',
     url: 'https://www.xbiz.com/rss/newswire/', board: 'business', nsfw: false,
-    enabled: true, verified: false, note: 'blocked by network filter on dev machine',
+    enabled: false, verified: false, note: 'HTTP 404 — the newswire feed is gone.',
   },
   {
     id: 'avn', name: 'AVN', adapter: 'rss', kind: 'news',
     url: 'https://avn.com/feed/articles.rss', board: 'newsroom', nsfw: false,
-    enabled: true, verified: false, note: 'blocked by network filter on dev machine',
+    enabled: true, verified: true,
   },
   {
     id: 'ynot', name: 'YNOT', adapter: 'rss', kind: 'news',
-    url: 'https://www.ynotmag.com/feed/', board: 'business', nsfw: false,
-    enabled: true, verified: false, note: 'blocked by network filter on dev machine',
+    url: 'https://www.ynot.com/feed/', board: 'business', nsfw: false,
+    enabled: true, verified: true, note: 'moved from ynotmag.com',
   },
 
   // -- creator economy / platform business ---------------------------------
@@ -160,8 +161,8 @@ const BUILTIN = [
   {
     id: 'eporner', name: 'EPorner', adapter: 'json', kind: 'video',
     url: 'https://www.eporner.com/api/v2/video/search/?query=&per_page=30&order=top-weekly&format=json&thumbsize=big',
-    board: 'videos', nsfw: true, enabled: true, verified: false,
-    note: 'documented public API v2; blocked by network filter on dev machine',
+    board: 'videos', nsfw: true, enabled: true, verified: true,
+    note: 'documented public API v2, no key required',
     itemsPath: 'videos',
     map: {
       guid: 'id',
@@ -179,8 +180,8 @@ const BUILTIN = [
   {
     id: 'pornhub', name: 'Pornhub', adapter: 'json', kind: 'video',
     url: 'https://www.pornhub.com/webmasters/search?thumbsize=large&ordering=mostviewed&period=weekly&page=1',
-    board: 'videos', nsfw: true, enabled: true, verified: false,
-    note: 'webmasters API; blocked by network filter on dev machine',
+    board: 'videos', nsfw: true, enabled: false, verified: false,
+    note: 'DISABLED: robots.txt disallows /webmasters/. We built a robots checker so that answer would be honoured, not worked around.',
     itemsPath: 'videos',
     map: {
       guid: 'video_id',
