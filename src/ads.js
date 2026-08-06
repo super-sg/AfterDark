@@ -88,13 +88,6 @@ const UNITS = {
   banner: { key: 'e308ee2af40bd02bb82dcb6c6b5788b4', width: 468, height: 60 },
 };
 
-/** The native-recommendation widget sizes itself, so it has no fixed box. */
-const NATIVE = {
-  script: 'https://pl30412496.effectivecpmnetwork.com/8d23cadd0711f190c1e11b03a64021b8/invoke.js',
-  container: 'container-8d23cadd0711f190c1e11b03a64021b8',
-  height: 320,
-};
-
 /**
  * The "smart link" is a plain URL rather than a script, which makes it the one
  * high-yield format that needs no exception anywhere: it renders as an ordinary
@@ -116,10 +109,11 @@ const SMART_LINK = process.env.ADS_SMART_LINK
 const POPUNDER = process.env.ADS_POPUNDER === '1'
   ? 'https://pl30723499.effectivecpmnetwork.com/a2/14/5a/a2145ad7b1da3787c6e8122370de8d23.js'
   : '';
-const POPUNDER_HOST = 'https://pl30723499.effectivecpmnetwork.com';
+// Only named in the frame CSP when the pop-under is actually switched on —
+// a permitted host that nothing loads is a standing permission for no reason.
+const POPUNDER_HOST = POPUNDER ? 'https://pl30723499.effectivecpmnetwork.com' : '';
 
 const BANNER_HOST = 'https://www.highperformanceformat.com';
-const NATIVE_HOST = 'https://pl30412496.effectivecpmnetwork.com';
 
 /**
  * Placements. Each names a desktop unit and, where the desktop one will not
@@ -161,8 +155,11 @@ const SLOTS = {
   // --- always present ------------------------------------------------------
   footer: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
 
-  // In-feed native, every few rows.
-  feed: { native: true, label: 'Sponsored' },
+  // In-feed, every few rows. This was a native-recommendation widget on a key
+  // from an earlier batch, which is also the one unit that never filled once
+  // the origin was fixed — most likely retired. Replaced with a declared unit
+  // at a row-sized shape, so nothing here runs on a tag we were not given.
+  feed: { desktop: 'banner', mobile: 'mobileBanner', label: 'Sponsored' },
 
   /**
    * Sticky bar, phones only. The highest-yielding unit on adult traffic and the
@@ -232,16 +229,6 @@ function frameHtml(slotName, variant) {
   const slot = SLOTS[slotName];
   if (!slot) return null;
 
-  if (slot.native) {
-    return `<!doctype html><html><head><meta charset="utf-8">
-<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
-</head><body>
-<div id="${NATIVE.container}"></div>
-<script async data-cfasync="false" src="${NATIVE.script}"></script>
-${PROBE}
-</body></html>`;
-  }
-
   const unitName = variant === 'mobile' ? (slot.mobile || slot.desktop) : (slot.desktop || slot.mobile);
   const unit = UNITS[unitName];
   if (!unit) return null;
@@ -279,11 +266,11 @@ const SITE_ORIGIN = String(process.env.SITE_ORIGIN || '').trim().replace(/\/+$/,
 const FRAME_CSP = [
   `frame-ancestors 'self'${SITE_ORIGIN ? ` ${SITE_ORIGIN}` : ''}`,
   "default-src 'none'",
-  `script-src 'unsafe-inline' ${BANNER_HOST} ${NATIVE_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
+  `script-src 'unsafe-inline' ${BANNER_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "style-src 'unsafe-inline'",
   'img-src https: data:',
   'frame-src https:',
-  `connect-src ${BANNER_HOST} ${NATIVE_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
+  `connect-src ${BANNER_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "form-action 'none'",
 ].join('; ');
 
@@ -291,7 +278,6 @@ const FRAME_CSP = [
 function slotMeta(name) {
   const slot = SLOTS[name];
   if (!slot) return null;
-  if (slot.native) return { name, native: true, label: slot.label, height: NATIVE.height };
   const desktop = slot.desktop ? UNITS[slot.desktop] : null;
   const mobile = slot.mobile ? UNITS[slot.mobile] : null;
   return {
