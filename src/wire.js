@@ -184,8 +184,14 @@ async function ingest({ only = null, log = () => {} } = {}) {
         continue;
       }
 
-      const guid = `${s.id}:${item.guid || item.link}`.slice(0, 400);
-      if (posts.wireExists(guid)) {
+      // Sibling sources — the same catalogue queried three ways — share a
+      // namespace, or the same clip is filed once per variant.
+      const guid = `${s.dedupeKey || s.id}:${item.guid || item.link}`.slice(0, 400);
+      // Two checks, because the guid alone is not a stable identity: it is
+      // namespaced by source id, so renaming a source orphans every previous
+      // key and the entire back catalogue re-ingests as new. The URL does not
+      // move, so it catches what the guid misses.
+      if (posts.wireExists(guid) || posts.urlExists(item.link)) {
         summary.skipped++;
         continue;
       }

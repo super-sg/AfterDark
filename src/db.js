@@ -454,7 +454,10 @@ const COLUMN_MIGRATIONS = [
   ['boards', 'nsfw', 'INTEGER NOT NULL DEFAULT 0'],
   ['boards', 'created_by', 'INTEGER'],
   ['boards', 'banner_tint', "TEXT NOT NULL DEFAULT ''"],
-  ['boards', 'official', 'INTEGER NOT NULL DEFAULT 0'],   // seeded, not user-made
+  ['boards', 'official', 'INTEGER NOT NULL DEFAULT 0'],
+  // Does this board's output belong in Home and Popular, or is it a place you
+  // go? A high-volume shelf drowns everything slower than it.
+  ['boards', 'firehose', 'INTEGER NOT NULL DEFAULT 0'],   // seeded, not user-made
   ['mod_actions', 'board_id', 'INTEGER'],
   ['mod_actions', 'rule_id', 'INTEGER'],
   // Preferences follow the account rather than the browser.

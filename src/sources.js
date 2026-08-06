@@ -38,6 +38,7 @@ const USER_AGENT = process.env.WIRE_USER_AGENT
  * @property {object} [map]      JSON adapter field mapping
  * @property {string} [itemsPath] JSON adapter path to the item array
  * @property {string[]} [filter] only file items matching one of these terms
+ * @property {string} [dedupeKey] share a guid namespace with sibling sources
  * @property {string} [note]
  */
 
@@ -160,6 +161,7 @@ const BUILTIN = [
   // publisher to watch. Nothing is mirrored or re-hosted.
   {
     id: 'eporner', name: 'EPorner · Weekly', adapter: 'json', kind: 'video',
+    dedupeKey: 'eporner',
     url: 'https://www.eporner.com/api/v2/video/search/?query=&per_page=30&order=top-weekly&format=json&thumbsize=big',
     board: 'videos', nsfw: true, enabled: true, verified: true,
     note: 'documented public API v2, no key required',
@@ -179,6 +181,7 @@ const BUILTIN = [
   },
   {
     id: 'eporner-month', name: 'EPorner · Monthly', adapter: 'json', kind: 'video',
+    dedupeKey: 'eporner',
     url: 'https://www.eporner.com/api/v2/video/search/?query=&per_page=30&order=top-monthly&format=json&thumbsize=big',
     board: 'videos', nsfw: true, enabled: true, verified: true,
     note: 'same API, longer window — different shelf',
@@ -198,6 +201,7 @@ const BUILTIN = [
   },
   {
     id: 'eporner-new', name: 'EPorner · Fresh', adapter: 'json', kind: 'video',
+    dedupeKey: 'eporner',
     url: 'https://www.eporner.com/api/v2/video/search/?query=&per_page=30&order=latest&format=json&thumbsize=big',
     board: 'videos', nsfw: true, enabled: true, verified: true,
     note: 'newest uploads',
@@ -217,6 +221,7 @@ const BUILTIN = [
   },
   {
     id: 'eporner-jav', name: 'EPorner · JAV', adapter: 'json', kind: 'video',
+    dedupeKey: 'eporner',
     url: 'https://www.eporner.com/api/v2/video/search/?query=japanese&per_page=30&order=top-weekly&format=json&thumbsize=big',
     board: 'jav', nsfw: true, enabled: true, verified: true,
     note: 'category query; fills the JAV shelf alongside the trade press',
@@ -236,6 +241,7 @@ const BUILTIN = [
   },
   {
     id: 'eporner-hentai', name: 'EPorner · Hentai', adapter: 'json', kind: 'video',
+    dedupeKey: 'eporner',
     url: 'https://www.eporner.com/api/v2/video/search/?query=hentai&per_page=30&order=top-weekly&format=json&thumbsize=big',
     board: 'hentai', nsfw: true, enabled: true, verified: true,
     note: 'category query; fills the hentai shelf',
@@ -339,6 +345,7 @@ function shape(row) {
     note: row.note || '',
     // Mapping lives in code, not the database — it is a parser detail, and
     // letting it be edited over HTTP would be a needless foothold.
+    dedupeKey: builtin ? builtin.dedupeKey || builtin.id : row.id,
     itemsPath: builtin ? builtin.itemsPath : row.items_path || '',
     map: builtin ? builtin.map : safeJson(row.field_map),
     filter: builtin ? builtin.filter || null : null,

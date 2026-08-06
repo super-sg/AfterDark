@@ -126,7 +126,7 @@ const users = {
 const boards = {
   all() {
     return prep(
-      `SELECT id, slug, name, tagline, description, kind, accent, icon, rules, nsfw, official,
+      `SELECT id, slug, name, tagline, description, kind, accent, icon, rules, nsfw, official, firehose,
               member_count, post_count, created_at
          FROM boards ORDER BY sort_order ASC, member_count DESC`
     ).all();
@@ -148,12 +148,12 @@ const boards = {
   },
 
   /** Keep an existing board's copy in step with the seed definition. */
-  update(slug, { name, tagline, description, kind, accent, rules, sortOrder, nsfw }) {
+  update(slug, { name, tagline, description, kind, accent, rules, sortOrder, nsfw, firehose = false }) {
     return prep(
       `UPDATE boards SET name = ?, tagline = ?, description = ?, kind = ?, accent = ?,
-                         rules = ?, sort_order = ?, nsfw = ?
+                         rules = ?, sort_order = ?, nsfw = ?, firehose = ?
         WHERE slug = ? COLLATE NOCASE`
-    ).run(name, tagline, description, kind, accent, JSON.stringify(rules || []), sortOrder, nsfw ? 1 : 0, slug).changes;
+    ).run(name, tagline, description, kind, accent, JSON.stringify(rules || []), sortOrder, nsfw ? 1 : 0, firehose ? 1 : 0, slug).changes;
   },
 
   subscribe(userId, boardId) {
@@ -382,13 +382,29 @@ const TIME_WINDOWS = {
  * @param {string|null} opts.cursor
  * @param {number} opts.limit
  */
-function feed({ sort = 'hot', boardId = null, boardIds = null, window = 'all', cursor = null, limit = 25, includeRemoved = false } = {}) {
+/**
+ * Cursor-paginated feed.
+ *
+ * `excludeFirehose` keeps high-volume shelves out of the shared feeds. A
+ * board pulling 150 clips a day will bury a 400-point discussion thread purely
+ * on recency, and a front page where the slowest, most-replied-to content is
+ * invisible is not a front page — it is a firehose with a comment box.
+ */
+function feed({ sort = 'hot', boardId = null, boardIds = null, window = 'all', cursor = null, limit = 25, includeRemoved = false, excludeFirehose = false } = {}) {
   limit = Math.min(Math.max(Number(limit) || 25, 1), 100);
   const cur = decodeCursor(cursor);
   const where = [];
   const params = [];
 
   if (!includeRemoved) where.push('p.removed = 0');
+  // Only when no specific board was asked for: visiting the shelf directly
+  // should obviously still show it.
+  if (excludeFirehose && !boardId) {
+    where.push('b.firehose = 0');
+    // Not just the shelf: a clip is a clip wherever it was filed, and 30 of
+    // them arriving at once will bury a discussion thread on recency alone.
+    where.push("p.kind != 'video'");
+  }
   if (boardId) {
     where.push('p.board_id = ?');
     params.push(boardId);
@@ -436,6 +452,7 @@ function feed({ sort = 'hot', boardId = null, boardIds = null, window = 'all', c
     const recent = prep(
       `SELECT ${POST_COLUMNS} ${FROM_POSTS}
         WHERE p.removed = 0 AND p.created_at > ? ${boardId ? 'AND p.board_id = ?' : ''}
+          ${excludeFirehose && !boardId ? "AND b.firehose = 0 AND p.kind != 'video'" : ''}
         ORDER BY p.created_at DESC LIMIT 300`
     ).all(...(boardId ? [now() - 43200e3, boardId] : [now() - 43200e3]));
     const ranked = recent
@@ -650,6 +667,19 @@ const posts = {
 
   wireExists(guid) {
     return !!prep('SELECT 1 FROM posts WHERE wire_guid = ?').get(guid);
+  },
+
+  /**
+   * Has this article already been filed, under any guid?
+   *
+   * The guid is namespaced by source id, so renaming a source — or a publisher
+   * changing its own id scheme — silently orphans every previous key and the
+   * whole back catalogue re-ingests as new. The canonical URL does not move,
+   * so it is the durable identity for "this is the same story".
+   */
+  urlExists(url) {
+    if (!url) return false;
+    return !!prep('SELECT 1 FROM posts WHERE url = ? OR source_url = ?').get(url, url);
   },
 
   /** Attach media after the fact — enrichment happens off the request path. */

@@ -15,7 +15,8 @@
     "seed": "node scripts/seed.js",
     "wire": "node scripts/fetch-wire.js",
     "loadtest": "node scripts/loadtest.js",
-    "seed:discussion": "node scripts/seed-discussion.js"
+    "seed:discussion": "node scripts/seed-discussion.js",
+    "seed:reactions": "node scripts/seed-reactions.js"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",

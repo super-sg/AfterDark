@@ -197,7 +197,7 @@ function parseFeed(xml) {
     const parsed = dateStr ? Date.parse(dateStr) : NaN;
     const media = imageOf(chunk);
     return {
-      title: stripTags(tag(chunk, 'title')),
+      title: repairEncoding(stripTags(tag(chunk, 'title'))),
       link: linkOf(chunk),
       guid: tag(chunk, 'guid') || tag(chunk, 'id') || linkOf(chunk),
       summary: stripTags(
@@ -280,10 +280,10 @@ function parseJson(json, spec) {
     };
     const link = str('link');
     return {
-      title: stripTags(str('title')),
+      title: repairEncoding(stripTags(str('title'))),
       link,
       guid: str('guid') || link,
-      summary: stripTags(str('summary')),
+      summary: repairEncoding(stripTags(str('summary'))),
       publishedAt: toTimestamp(pluck(raw, map.publishedAt)),
       image: isHttp(str('image')) ? str('image') : '',
       imageW: toInt(pluck(raw, map.imageW)),
@@ -297,6 +297,34 @@ function parseJson(json, spec) {
 }
 
 // ---------------------------------------------------------------------------
+
+/**
+ * Repair double-encoded UTF-8.
+ *
+ * Some publishers serve text whose UTF-8 bytes were read as Latin-1 and then
+ * re-encoded, so a Japanese title arrives as a run of accented Latin letters.
+ * Reversing that is exact when it applies: take the string back to Latin-1
+ * bytes and read them as UTF-8.
+ *
+ * Guarded two ways, because the transform is destructive on text that was
+ * never broken: it only runs when the string actually contains the byte
+ * signature of the fault, and the result is discarded if it decodes to
+ * replacement characters.
+ */
+// The lead range has to reach \u00F4, not stop at \u00C3: Japanese is three-byte
+// UTF-8 and its lead bytes surface in the \u00E3 region, not the Latin-1 supplement.
+const MOJIBAKE = /[\u00C2-\u00F4][\u0080-\u00BF]/;
+
+function repairEncoding(text) {
+  const str = String(text ?? '');
+  if (!MOJIBAKE.test(str)) return str;
+  try {
+    const decoded = Buffer.from(str, 'latin1').toString('utf8');
+    return decoded.includes('�') ? str : decoded;
+  } catch {
+    return str;
+  }
+}
 
 const TAG_STOPWORDS = new Set(['uncategorized', 'uncategorised', 'news', 'featured', 'general', 'video', 'videos', 'hd', 'porn', 'sex', 'xxx', 'free']);
 
@@ -317,6 +345,6 @@ function normaliseTags(list) {
 }
 
 module.exports = {
-  parseFeed, parseJson, parseDuration, normaliseTags,
+  parseFeed, parseJson, parseDuration, normaliseTags, repairEncoding,
   stripTags, decodeEntities, pluck, pluckList, imageOf,
 };

@@ -870,11 +870,14 @@ router.get('/feed', requireAge, (req, res) => {
   // Subscribed feeds are per-user, so they skip the shared cache.
   const cacheKey = scope === 'subscribed'
     ? null
-    : `f|${sort}|${boardId || '-'}|${window}|${limit}|${cursor || '-'}`;
+    : `f|${sort}|${boardId || '-'}|${window}|${limit}|${cursor || '-'}|nofh`;
 
+  // The video shelf is a place you go, not something that arrives. 150 clips a
+  // day would bury every discussion thread on recency alone.
+  const opts = { sort, window, cursor, limit, excludeFirehose: true };
   const result = cacheKey
-    ? feedCache.wrap(cacheKey, () => store.posts.feed({ sort, boardId, window, cursor, limit }))
-    : store.posts.feed({ sort, boardIds, window, cursor, limit });
+    ? feedCache.wrap(cacheKey, () => store.posts.feed({ ...opts, boardId }))
+    : store.posts.feed({ ...opts, boardIds });
 
   // Clone so per-viewer vote state never leaks into the shared cache entry.
   const items = result.items.map((p) => ({ ...p }));
