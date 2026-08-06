@@ -172,10 +172,29 @@ function generatedCover(post, { glyphSize = 46 } = {}) {
 const REVEAL_KEY = 'ad:reveal';
 const revealedThisSession = new Set();
 
+/**
+ * Explicit thumbnails are shown by default.
+ *
+ * Blur-by-default was right when the age gate was the only signal we had: a
+ * reader could land here without having said anything about themselves. That
+ * is no longer true — the interstitial is confirmed, the boards are labelled,
+ * and the person is on an adult site on purpose. Making them click twice for
+ * every picture treats a decision they already made as if it were an accident.
+ *
+ * The toggle stays, and it stays honoured: anyone who turns blurring on gets it
+ * everywhere and it follows their account. Absent a stored preference, the
+ * default matches what the site is.
+ */
 export const revealsAll = () => {
-  try { return localStorage.getItem(REVEAL_KEY) === '1'; } catch { return false; }
+  try {
+    const stored = localStorage.getItem(REVEAL_KEY);
+    return stored === null ? true : stored === '1';
+  } catch {
+    return true;
+  }
 };
 
+/** Persist the reader's choice. Also written by the Settings page. */
 export function setRevealAll(on) {
   try { localStorage.setItem(REVEAL_KEY, on ? '1' : '0'); } catch { /* private mode */ }
 }

@@ -342,7 +342,7 @@ const blocks = {
 const DEFAULT_PREFS = {
   theme: '',           // '' = follow the device/toggle
   view: 'card',
-  revealNsfw: false,
+  revealNsfw: true,   // the age gate is the gate; see ui.js revealsAll()
   autoplay: false,
   hideNsfwBoards: false,
   emailDigest: false,

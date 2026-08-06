@@ -46,80 +46,78 @@
 }
 
 /* ===========================================================================
-   Theme
+   Theme — black and neon yellow
    ---------------------------------------------------------------------------
-   Black, neon green, fluoro yellow. Two accents with separate jobs, kept
-   separate on purpose:
+   One accent, not two. The previous build split green (action) from yellow
+   (live), which is a defensible system and the wrong one here: two neons on
+   black fight, and the site reads as a dashboard rather than a place.
 
-     --accent    (neon green)   things you can DO — buttons, links, selection,
-                                the state you are in
-     --accent-2  (fluoro yellow) things that are LIVE — counts, unread, new,
-                                trending, upvoted
+   So the hue is fixed and the *intensity* carries the meaning:
+     --accent      full neon — buttons, current state, selection
+     --accent-lit  brighter, with a glow — live counts, unread, upvoted
+     --accent-dim  recessed — hover hints, rules, borders
 
-   Letting both mean everything is how a two-colour scheme turns into noise.
-
-   Three tokens exist so the light theme can invert cleanly:
-     --on-accent   ink on an accent fill; near-black in both, since both fills
-                   are luminous in both
-     --accent-ink  the accent as *text*, which has to survive the page behind it
-                   and therefore differs per theme
-     --scrim       overlays on photography, dark in both themes
+   Yellow at this chroma is close to white in luminance, so ink on top of an
+   accent fill is always near-black; there is no legible light-on-yellow.
    =========================================================================== */
 
 :root {
   --bg: #000000;
-  --bg-elev: #060607;
-  --surface: #0b0b0d;
-  --surface-2: #131316;
-  --surface-3: #1c1c20;
-  --line: #1e1e23;
-  --line-soft: #141417;
-  --line-strong: #2f2f37;
+  --bg-elev: #060604;
+  --surface: #0c0c09;
+  --surface-2: #141410;
+  --surface-3: #1d1d17;
+  --line: #20201a;
+  --line-soft: #161612;
+  --line-strong: #33332a;
 
-  --text: #f1f5f2;
-  --text-dim: #99a29b;
-  --text-faint: #667069;
+  --text: #f5f5ee;
+  --text-dim: #9d9d90;
+  --text-faint: #6b6b60;
 
-  --accent: #39ff88;
-  --accent-hover: #74ffb0;
-  --accent-ink: #39ff88;
-  --on-accent: #001b0c;
-  --accent-soft: rgb(57 255 136 / 0.11);
-  --accent-line: rgb(57 255 136 / 0.32);
+  --accent: #e9ff1a;
+  --accent-hover: #f4ff70;
+  --accent-lit: #fbff8c;
+  --accent-ink: #e9ff1a;
+  --on-accent: #100f00;
+  --accent-soft: rgb(233 255 26 / 0.12);
+  --accent-line: rgb(233 255 26 / 0.34);
 
-  --accent-2: #e9ff2b;
-  --accent-2-ink: #e9ff2b;
-  --on-accent-2: #14180a;
-  --accent-2-soft: rgb(233 255 43 / 0.12);
-  --accent-2-line: rgb(233 255 43 / 0.34);
+  /* Kept as aliases so every rule written against the two-accent system keeps
+     working — they now resolve to the same hue at a different intensity. */
+  --accent-2: #fbff8c;
+  --accent-2-ink: #fbff8c;
+  --on-accent-2: #100f00;
+  --accent-2-soft: rgb(251 255 140 / 0.13);
+  --accent-2-line: rgb(251 255 140 / 0.36);
 
-  --accent-warm: #ff7a1a;
-  --up: #e9ff2b;
-  --down: #5a6570;
-  --ok: #39ff88;
-  --warn: #e9ff2b;
+  --accent-warm: #ff8a1a;
+  --up: #e9ff1a;
+  --down: #6b6b60;
+  --ok: #e9ff1a;
+  --warn: #ff8a1a;
 
   --topbar-bg: rgb(0 0 0 / 0.9);
-  --backdrop: rgb(0 0 0 / 0.86);
+  --backdrop: rgb(0 0 0 / 0.88);
   --mix-ink: #ffffff;
   --hairline: rgb(255 255 255 / 0.045);
-  --cover-glyph: rgb(255 255 255 / 0.13);
-  --cover-l1: 20%;
-  --cover-l2: 13%;
-  --cover-s: 44%;
+  --cover-glyph: rgb(233 255 26 / 0.12);
+  --cover-l1: 19%;
+  --cover-l2: 12%;
+  --cover-s: 40%;
 
-  --scrim: rgb(0 0 0 / 0.7);
-  --scrim-soft: rgb(0 0 0 / 0.32);
+  --scrim: rgb(0 0 0 / 0.72);
+  --scrim-soft: rgb(0 0 0 / 0.34);
   --on-scrim: #ffffff;
 
   --radius: 7px;
   --radius-sm: 5px;
   --radius-lg: 12px;
 
-  --shadow: 0 1px 2px rgb(0 0 0 / 0.8), 0 12px 32px -18px rgb(0 0 0 / 1);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.85), 0 12px 32px -18px rgb(0 0 0 / 1);
   --shadow-lg: 0 30px 70px -26px rgb(0 0 0 / 1);
-  --glow: 0 0 0 1px var(--accent-line), 0 6px 28px -10px rgb(57 255 136 / 0.42);
-  --glow-2: 0 0 0 1px var(--accent-2-line), 0 6px 28px -10px rgb(233 255 43 / 0.4);
+  --glow: 0 0 0 1px var(--accent-line), 0 6px 30px -10px rgb(233 255 26 / 0.45);
+  --glow-2: 0 0 0 1px var(--accent-2-line), 0 6px 30px -10px rgb(251 255 140 / 0.42);
 
   --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --serif: 'Newsreader', 'Iowan Old Style', Georgia, serif;
@@ -135,55 +133,56 @@
   color-scheme: dark;
 }
 
-/* Neon is a dark-room colour. On white it has almost no contrast, so the light
-   theme keeps both accents as *fills* with dark ink and drops to a deep,
-   readable green and olive wherever an accent has to be text. */
+/* Neon yellow is a dark-room colour: on white it has almost no contrast at
+   all. The light theme keeps it as a fill with near-black ink and drops to a
+   deep olive wherever the accent has to be text. */
 :root[data-theme='light'] {
-  --bg: #eef0ee;
+  --bg: #efefe9;
   --bg-elev: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f3f5f3;
-  --surface-3: #e6e9e6;
-  --line: #e0e4e0;
-  --line-soft: #edf0ed;
-  --line-strong: #c5ccc6;
+  --surface-2: #f4f4ee;
+  --surface-3: #e7e7df;
+  --line: #e1e1d8;
+  --line-soft: #eeeee7;
+  --line-strong: #c6c6ba;
 
-  --text: #0c100d;
-  --text-dim: #525c55;
-  --text-faint: #818b84;
+  --text: #101008;
+  --text-dim: #55554a;
+  --text-faint: #83837a;
 
-  --accent: #00c964;
-  --accent-hover: #00b058;
-  --accent-ink: #00713a;
-  --on-accent: #00180c;
-  --accent-soft: rgb(0 201 100 / 0.13);
-  --accent-line: rgb(0 201 100 / 0.4);
+  --accent: #d9ec00;
+  --accent-hover: #c6d800;
+  --accent-lit: #b8c900;
+  --accent-ink: #5a6600;
+  --on-accent: #14150a;
+  --accent-soft: rgb(150 168 0 / 0.16);
+  --accent-line: rgb(150 168 0 / 0.42);
 
-  --accent-2: #d6ee00;
-  --accent-2-ink: #5d6b00;
-  --on-accent-2: #14180a;
-  --accent-2-soft: rgb(150 170 0 / 0.16);
-  --accent-2-line: rgb(150 170 0 / 0.42);
+  --accent-2: #b8c900;
+  --accent-2-ink: #4e5800;
+  --on-accent-2: #14150a;
+  --accent-2-soft: rgb(150 168 0 / 0.18);
+  --accent-2-line: rgb(150 168 0 / 0.44);
 
-  --accent-warm: #d3540d;
-  --up: #6a7a00;
-  --down: #44506a;
-  --ok: #00713a;
-  --warn: #9a6300;
+  --accent-warm: #c25a08;
+  --up: #5a6600;
+  --down: #4a4a58;
+  --ok: #4e6b00;
+  --warn: #9a5a00;
 
   --topbar-bg: rgb(255 255 255 / 0.9);
-  --backdrop: rgb(10 16 12 / 0.44);
-  --mix-ink: #0c100d;
+  --backdrop: rgb(14 14 8 / 0.46);
+  --mix-ink: #101008;
   --hairline: rgb(0 0 0 / 0.05);
   --cover-glyph: rgb(0 0 0 / 0.16);
   --cover-l1: 90%;
   --cover-l2: 82%;
-  --cover-s: 52%;
+  --cover-s: 50%;
 
-  --shadow: 0 1px 2px rgb(12 22 16 / 0.07), 0 8px 24px -16px rgb(12 22 16 / 0.24);
-  --shadow-lg: 0 24px 60px -22px rgb(12 22 16 / 0.3);
-  --glow: 0 0 0 1px var(--accent-line), 0 6px 22px -12px rgb(0 201 100 / 0.35);
-  --glow-2: 0 0 0 1px var(--accent-2-line), 0 6px 22px -12px rgb(150 170 0 / 0.3);
+  --shadow: 0 1px 2px rgb(18 18 10 / 0.07), 0 8px 24px -16px rgb(18 18 10 / 0.24);
+  --shadow-lg: 0 24px 60px -22px rgb(18 18 10 / 0.3);
+  --glow: 0 0 0 1px var(--accent-line), 0 6px 22px -12px rgb(150 168 0 / 0.34);
+  --glow-2: var(--glow);
 
   color-scheme: light;
 }
