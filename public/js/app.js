@@ -38,6 +38,7 @@ const state = {
   trending: [],
   topics: [],
   sources: [],
+  wire: null,
   view: localStorage.getItem('ad:view') || 'card',
   feedLoading: false,
   currentPost: null,
@@ -98,7 +99,7 @@ async function boot() {
     return;
   }
 
-  await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+  await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds(), loadWireStatus()]);
   // After loadAds: the slot geometry has to exist before anything can mount.
   mountPersistentAds();
   renderRails();
@@ -117,7 +118,7 @@ function showAgeGate() {
       state.ageOk = true;
       gate.hidden = true;
       document.body.classList.remove('is-gated');
-      await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+      await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds(), loadWireStatus()]);
   // After loadAds: the slot geometry has to exist before anything can mount.
   mountPersistentAds();
       renderRails();
@@ -182,6 +183,14 @@ async function loadTopics() {
     state.topics = (await api.get('/topics')).items;
   } catch {
     state.topics = [];
+  }
+}
+
+async function loadWireStatus() {
+  try {
+    state.wire = await api.get('/wire/status');
+  } catch {
+    state.wire = null;
   }
 }
 
@@ -379,6 +388,29 @@ function watchAdBreakpoint() {
   mq.addEventListener('change', mountPersistentAds);
 }
 
+/**
+ * When the wire last ran. The pull is silent when nothing new has been
+ * published, which is most of the time — without this, a working wire and a
+ * dead one look exactly the same from the outside.
+ */
+function wireLivePanel() {
+  const w = state.wire;
+  if (!w || !w.lastRunAt) return '';
+  const stale = Date.now() - w.lastRunAt > 45 * 60000;
+  return `<section class="panel wirelive${stale ? ' wirelive--stale' : ''}">
+    <p class="panel__title">${icon('radio', { size: 13 })} Wire</p>
+    <p class="wirelive__line">
+      <span class="wirelive__dot"></span>
+      Checked <b>${esc(timeAgo(w.lastRunAt))}</b>
+    </p>
+    <p class="wirelive__meta">
+      ${w.healthy}/${w.sources} sources · ${num(w.itemsSeen)} items scanned
+      ${w.newestStory ? `<br>Latest story ${esc(timeAgo(w.newestStory))}` : ''}
+    </p>
+    ${isStaff() ? `<button class="btn btn--sm btn--block" data-refresh-wire>Pull now</button>` : ''}
+  </section>`;
+}
+
 function wireStatusPanel() {
   const enabled = state.sources.filter((s) => s.enabled);
   const down = enabled.filter((s) => s.lastStatus && s.lastStatus !== 'ok');
@@ -447,6 +479,8 @@ function renderRightRail() {
           </li>`).join('')}
       </ol>
     </section>` : ''}
+
+    ${wireLivePanel()}
 
     ${adSlot('railMid')}
 
@@ -704,6 +738,8 @@ function scheduleUpdateCheck() {
 }
 
 async function checkForUpdates() {
+  // Piggyback on the poll the "new posts" pill already makes.
+  loadWireStatus().then(() => renderRightRail()).catch(() => {});
   const slot = document.querySelector('[data-newpill]');
   if (!slot || document.hidden || !state.feedWatermark) return;
   const boardSlug = location.pathname.match(/^\/b\/([\w-]+)/)?.[1] || '';
@@ -2846,7 +2882,7 @@ document.addEventListener('click', async (event) => {
         + `${dead ? `, ${dead} unreachable` : ''}.`,
         dead && !summary.added ? 'error' : 'ok'
       );
-      await Promise.all([loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+      await Promise.all([loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds(), loadWireStatus()]);
   // After loadAds: the slot geometry has to exist before anything can mount.
   mountPersistentAds();
       renderRightRail();

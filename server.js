@@ -219,7 +219,14 @@ function startWorker() {
       const pull = () => {
         ingest()
           .then((s) => {
-            if (s.added) console.log(`[wire] +${s.added} items (${s.skipped} dupes)`);
+            // Log every pull, including the quiet ones. Logging only on change
+            // makes a working wire and a dead one look identical, which is the
+            // single most confusing thing about a background job.
+            const ok = s.perSource.filter((x) => x.status === 'ok').length;
+            console.log(
+              `[wire] ${new Date().toISOString().slice(11, 19)} `
+              + `${ok}/${s.perSource.length} sources · +${s.added} new · ${s.skipped} already had`
+            );
             // Name the unreachable sources: on a filtered network half the
             // registry silently returns nothing, and that must not look like
             // "the industry published no news today".
@@ -230,8 +237,10 @@ function startWorker() {
           })
           .catch((err) => console.warn('[wire] pull failed:', err.message));
       };
+      const everyMs = Math.max(60_000, Number(process.env.WIRE_INTERVAL_MS) || 10 * 60_000);
+      console.log(`[wire] polling ${Math.round(everyMs / 60000)} min`);
       setTimeout(pull, 15_000).unref();
-      setInterval(pull, 20 * 60_000).unref();
+      setInterval(pull, everyMs).unref();
     }
   }
 

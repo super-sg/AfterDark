@@ -190,6 +190,7 @@ npm run loadtest -- --users 1000 --seconds 20
 | `ADMIN_USERS` | `admin` | Comma-separated names granted admin on registration |
 | `AGE_ASSURANCE_MODE` | `self` | `self` (interstitial) or `vendor` (delegate to `AGE_VERIFY_URL`) |
 | `WIRE_AUTO` | on | Set `0` to disable automatic wire polling |
+| `WIRE_INTERVAL_MS` | `600000` | How often the wire polls. Floor of 60s. |
 | `WIRE_USER_AGENT` | `AfterDarkWire/2.0 …` | Sent on every outbound fetch and matched against robots.txt |
 
 ---

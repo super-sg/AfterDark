@@ -782,6 +782,11 @@ const posts = {
    * Posts created since a timestamp, for the "N new posts" pill. Counting is
    * far cheaper than re-running the feed, so the client can poll it often.
    */
+  /** When the most recent article was published by its publisher. */
+  newestPublished() {
+    return prep("SELECT MAX(published_at) AS t FROM posts WHERE removed = 0 AND kind = 'article'").get().t || null;
+  },
+
   newerThan(sinceMs, boardId = null) {
     return prep(
       `SELECT COUNT(*) AS n FROM posts

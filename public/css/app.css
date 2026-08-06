@@ -3940,3 +3940,29 @@ html { scroll-behavior: smooth; }
 
 /* An in-flow slot that carries a close button still needs room for it. */
 .adslot--feed { position: relative; }
+
+/* Wire heartbeat. The dot is the whole point — a pull that finds nothing is
+   silent, so the panel has to say "I checked" rather than only "I found". */
+.wirelive__line { display: flex; align-items: center; gap: 7px; margin: 0 0 6px; font-size: 13px; color: var(--text-dim); }
+.wirelive__line b { color: var(--text); font-weight: 600; }
+.wirelive__meta { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--text-faint); }
+.wirelive .btn { margin-top: 11px; }
+
+.wirelive__dot {
+  width: 7px; height: 7px; flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-line);
+  animation: wirePulse 2.6s ease-out infinite;
+}
+@keyframes wirePulse {
+  0%   { box-shadow: 0 0 0 0 rgb(233 255 26 / 0.5); }
+  70%  { box-shadow: 0 0 0 7px rgb(233 255 26 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(233 255 26 / 0); }
+}
+
+/* Older than three polling intervals: something is wrong, say so quietly. */
+.wirelive--stale { border-color: var(--accent-2-line); }
+.wirelive--stale .wirelive__dot { background: var(--text-faint); animation: none; }
+
+@media (prefers-reduced-motion: reduce) { .wirelive__dot { animation: none; } }

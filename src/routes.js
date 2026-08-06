@@ -1178,6 +1178,25 @@ router.get('/posts/:id', requireAge, (req, res) => {
 // of every source is inspectable.
 // ---------------------------------------------------------------------------
 
+/**
+ * When the wire last ran, and how it went. Separate from /sources because the
+ * question "is this site live?" is asked far more often than "which publisher
+ * is broken", and it should be one cheap call.
+ */
+router.get('/wire/status', requireAge, (req, res) => {
+  const list = sources.all().filter((s) => s.enabled);
+  const lastRun = Math.max(0, ...list.map((s) => s.lastRunAt || 0));
+  const healthy = list.filter((s) => s.lastStatus === 'ok');
+  res.set('Cache-Control', 'private, max-age=30');
+  res.json({
+    lastRunAt: lastRun || null,
+    sources: list.length,
+    healthy: healthy.length,
+    itemsSeen: list.reduce((n, s) => n + (s.itemsSeen || 0), 0),
+    newestStory: store.posts.newestPublished(),
+  });
+});
+
 router.get('/sources', requireAge, (req, res) => {
   const staff = isStaff(req);
   const list = sources.all().map((s) => ({
