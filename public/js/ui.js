@@ -340,7 +340,14 @@ export const dismissAd = (name) => dismissed.add(name);
 export const adConfigSmartLink = () => (adConfig.enabled ? adConfig.smartLink || '' : '');
 export const setAdConfig = (cfg) => { adConfig = cfg || { enabled: false, slots: [] }; };
 
-const SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
+/**
+ * The sandbox and the frame host both come from the server, because they are
+ * two halves of one decision: `allow-same-origin` is only safe when the frame
+ * is served from somewhere that is not us. See the comment in src/ads.js.
+ */
+const FALLBACK_SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
+const adSandbox = () => adConfig.sandbox || FALLBACK_SANDBOX;
+const adOrigin = () => adConfig.origin || '';
 
 /**
  * A slot starts collapsed and only takes space once the frame reports that a
@@ -380,9 +387,9 @@ export function adSlot(name, { className = '' } = {}) {
 
   return `<aside class="adslot${meta.native ? ' adslot--native' : ''}${className ? ` ${className}` : ''}"
                  style="${attr(size)}" data-adslot="${attr(name)}" aria-hidden="true">
-    <iframe class="adslot__frame" src="/ads/${attr(name)}${mobile && meta.mobile ? '?v=mobile' : ''}"
+    <iframe class="adslot__frame" src="${attr(adOrigin())}/ads/${attr(name)}${mobile && meta.mobile ? '?v=mobile' : ''}"
             title="${attr(meta.label)}" loading="lazy" scrolling="no"
-            sandbox="${SANDBOX}" referrerpolicy="no-referrer"
+            sandbox="${attr(adSandbox())}" referrerpolicy="no-referrer"
             ${meta.native ? '' : `width="${box.width}" height="${box.height}"`}></iframe>
     ${meta.sticky
       ? `<button class="adslot__close" data-ad-dismiss aria-label="Hide this advert">${icon('close', { size: 14 })}</button>`

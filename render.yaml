@@ -51,3 +51,46 @@ services:
         value: "5"
       - key: WARM_LIMIT
         value: "8"
+
+      # Where ad frames are served from. This MUST be a different origin to the
+      # site or the banners will not fill — see the long comment in src/ads.js.
+      # Render has no way to interpolate one service's URL into another's env,
+      # so this is the one value you set by hand after the first deploy:
+      # Dashboard > afterdark > Environment > ADS_ORIGIN, set to the URL of the
+      # afterdark-ads service below (https://afterdark-ads.onrender.com).
+      - key: ADS_ORIGIN
+        sync: false
+
+  # --------------------------------------------------------------------------
+  # The ad frame origin.
+  #
+  # Same image, same repo, one env var different. It exists only so ad tags get
+  # an origin of their own: they can use localStorage and render, while staying
+  # cross-origin to the site and therefore unable to read the session cookie,
+  # the page, or call the API as a signed-in reader.
+  # --------------------------------------------------------------------------
+  - type: web
+    name: afterdark-ads
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: ADS_ONLY
+        value: "1"
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "1"
+      - key: CLUSTER
+        value: "1"
+      - key: DB_PATH
+        value: /tmp/afterdark-ads.db
+      - key: IMAGE_CACHE_DIR
+        value: /tmp/imgcache
+      - key: SESSION_SECRET
+        generateValue: true
+      # Who is allowed to frame these ads. Set by hand to the main site's URL
+      # (https://afterdark.onrender.com) — without it, frame-ancestors falls
+      # back to 'self' and the site cannot embed them.
+      - key: SITE_ORIGIN
+        sync: false

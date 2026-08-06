@@ -28,6 +28,54 @@
 const ENABLED = process.env.ADS_ENABLED !== '0';
 
 /**
+ * Where ad frames are served from, and why it has to be somewhere else.
+ *
+ * The original design sandboxed each frame *without* `allow-same-origin`, so the
+ * tag ran at an opaque origin and could touch neither the session cookie nor the
+ * parent DOM. That part worked. What it also did was stop every banner from
+ * rendering: an opaque origin makes `localStorage` throw, Adsterra's tag probes
+ * for storage before it will serve, and a tag that finds none returns nothing.
+ * Measured, not assumed -- identical frame, `allow-scripts allow-popups` gives
+ * an empty box, adding `allow-same-origin` gives a 724x90 creative. Combined
+ * with slots that collapse when unfilled, the failure was invisible: the site
+ * looked deliberately ad-free while earning nothing.
+ *
+ * `allow-same-origin` on a frame served from our own host would hand ad script
+ * the run of the site -- the session cookie is httpOnly, but same-origin script
+ * can still call /api as the signed-in reader and read anything on the page.
+ *
+ * So the frame gets `allow-same-origin` and is served from a *different* origin.
+ * It then has an origin of its own: localStorage works and the tag renders,
+ * while the main site stays cross-origin and out of reach. This is the same
+ * reason ad platforms serve their SafeFrames from a separate domain.
+ *
+ * Set ADS_ORIGIN to a second host pointing at this app (see render.yaml). Left
+ * unset, ads are served same-origin and stay sandboxed -- safe, and empty.
+ */
+const ADS_ORIGIN = String(process.env.ADS_ORIGIN || '').trim().replace(/\/+$/, '');
+
+/**
+ * The escape hatch, off by default. Single-service deploys can trade the
+ * isolation for working banners, but it must be typed out deliberately rather
+ * than arrived at by accident.
+ */
+const UNSAFE_SAME_ORIGIN = process.env.ADS_ALLOW_SAME_ORIGIN === '1';
+
+const SANDBOX = [
+  'allow-scripts',
+  'allow-popups',
+  'allow-popups-to-escape-sandbox',
+  ...(ADS_ORIGIN || UNSAFE_SAME_ORIGIN ? ['allow-same-origin'] : []),
+].join(' ');
+
+if (ENABLED && !ADS_ORIGIN && !UNSAFE_SAME_ORIGIN) {
+  console.warn(
+    '[ads] ADS_ORIGIN is not set, so ad frames stay at an opaque origin and'
+    + ' banner tags will not fill. See the comment in src/ads.js.'
+  );
+}
+
+/**
  * Publisher units. These are Adsterra banner tags: the page declares an
  * `atOptions` object and then loads the matching invoke script.
  */
@@ -221,7 +269,15 @@ ${PROBE}
  * ad hosts, and the frames and images they need to render. Anything the tag
  * tries to load from elsewhere is refused.
  */
+/**
+ * Who may embed these frames. When ads move to their own host this is the only
+ * thing standing between it and anyone framing our inventory into their page,
+ * so it names the site rather than allowing all comers.
+ */
+const SITE_ORIGIN = String(process.env.SITE_ORIGIN || '').trim().replace(/\/+$/, '');
+
 const FRAME_CSP = [
+  `frame-ancestors 'self'${SITE_ORIGIN ? ` ${SITE_ORIGIN}` : ''}`,
   "default-src 'none'",
   `script-src 'unsafe-inline' ${BANNER_HOST} ${NATIVE_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "style-src 'unsafe-inline'",
@@ -252,6 +308,10 @@ const config = () => ({
   slots: Object.keys(SLOTS).map(slotMeta),
   smartLink: SMART_LINK,
   popunder: !!POPUNDER,
+  // The client builds frame URLs and the sandbox attribute from these, so the
+  // deployment decides the isolation model in one place instead of two.
+  origin: ADS_ORIGIN,
+  sandbox: SANDBOX,
 });
 
 /** Express handler for `/ads/:slot`. */
@@ -260,6 +320,12 @@ function handler(req, res) {
   const variant = req.query.v === 'mobile' ? 'mobile' : 'desktop';
   const html = frameHtml(req.params.slot, variant);
   if (!html) return res.status(404).end();
+
+  // Helmet sets X-Frame-Options: SAMEORIGIN globally. That is right for every
+  // other route and fatal here once the frames live on their own host, where
+  // "same origin" is the ad host and not the site. frame-ancestors above is the
+  // modern equivalent and is expressive enough to name the one site allowed.
+  res.removeHeader('X-Frame-Options');
 
   res.set({
     'Content-Type': 'text/html; charset=utf-8',
@@ -273,4 +339,7 @@ function handler(req, res) {
   res.end(html);
 }
 
-module.exports = { handler, config, slotMeta, frameHtml, SLOTS, UNITS, FRAME_CSP, ENABLED, SMART_LINK };
+module.exports = {
+  handler, config, slotMeta, frameHtml, SLOTS, UNITS, FRAME_CSP, ENABLED, SMART_LINK,
+  ADS_ORIGIN, SANDBOX,
+};

@@ -93,9 +93,15 @@ function startWorker() {
           fontSrc: ["'self'"],
           mediaSrc: ["'self'", 'data:'],
           // Video players are only injected after an explicit click-to-play.
-          // 'self' also covers the sandboxed /ads/ frames — no ad host appears
-          // here, so nothing third-party can execute in the main document.
-          frameSrc: ["'self'", 'https://www.youtube-nocookie.com', 'https://player.vimeo.com'],
+          // 'self' covers ad frames on a single-service deploy; ADS_ORIGIN adds
+          // the separate ad host when there is one. Either way the frame is a
+          // document, not a script — no ad code executes in the main document.
+          frameSrc: [
+            "'self'",
+            'https://www.youtube-nocookie.com',
+            'https://player.vimeo.com',
+            ...(process.env.ADS_ORIGIN ? [String(process.env.ADS_ORIGIN).trim().replace(/\/+$/, '')] : []),
+          ],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],
           baseUri: ["'self'"],
@@ -145,6 +151,17 @@ function startWorker() {
   // session cookie nor the parent DOM. See src/ads.js.
   app.get('/ads/:slot', require('./src/ads').handler);
 
+  // An ads-only instance exists for exactly one reason: to be an origin that is
+  // not the site's. Ad tags need storage, storage needs a real origin, and a
+  // real origin next to the session cookie is what we are avoiding. So this
+  // process serves frames and nothing else — publishing a second copy of the
+  // site here would be a duplicate for search engines and a second front door
+  // to keep secure, for no benefit.
+  if (process.env.ADS_ONLY === '1') {
+    app.get('/', (req, res) => res.type('text/plain').send('AfterDark ad frames.'));
+    app.use((req, res) => res.status(404).end());
+  }
+
   // Presence and traffic counters. After attachUser so a signed-in visitor is
   // recorded as one, before the router so every API read counts.
   app.use('/api/', sameOrigin, attachUser, require('./src/analytics').record, router);
@@ -177,8 +194,10 @@ function startWorker() {
   server.headersTimeout = 66_000;
   server.maxRequestsPerSocket = 0;
 
-  // One worker runs the periodic jobs so they don't stampede.
-  const isScheduler = process.env.WORKER_INDEX === '0' || WORKERS === 1;
+  // One worker runs the periodic jobs so they don't stampede. The ads-only
+  // instance runs none of them — it has no feed to fill.
+  const isScheduler = (process.env.WORKER_INDEX === '0' || WORKERS === 1)
+    && process.env.ADS_ONLY !== '1';
   if (isScheduler) {
     // Age out presence rows and old counters.
     const sweepAnalytics = setInterval(() => {
