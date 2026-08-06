@@ -7,7 +7,15 @@
 # ---- build ------------------------------------------------------------------
 # better-sqlite3 and sharp are native addons. They need a toolchain to compile,
 # which has no business being in the image that faces the internet.
-FROM node:24-bookworm-slim AS build
+#
+# Pinned to 22 (LTS) deliberately -- do not bump this to 24 without checking.
+# better-sqlite3 v11 publishes no prebuilt binary for Node 24's ABI, so on 24 it
+# silently falls back to compiling from source, and that build has a bug in
+# ~Statement(): it calls RemoveEnvironmentCleanupHook after the environment is
+# gone and aborts the process a second after boot. The build succeeds, the image
+# is fine, and the container dies on startup -- which reads like a config
+# problem and is not one. On 22 a tested prebuild is downloaded instead.
+FROM node:22-bookworm-slim AS build
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 make g++ ca-certificates \
@@ -18,7 +26,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
 
 # ---- runtime ----------------------------------------------------------------
-FROM node:24-bookworm-slim AS runtime
+# Must match the build stage exactly: a native addon is compiled against one
+# Node ABI and will not load on another.
+FROM node:22-bookworm-slim AS runtime
 
 ENV NODE_ENV=production
 WORKDIR /app

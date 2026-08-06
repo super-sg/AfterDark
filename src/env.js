@@ -29,7 +29,20 @@ if (fs.existsSync(ENV_PATH)) {
 
 if (!process.env.SESSION_SECRET) {
   if (process.env.NODE_ENV === 'production') {
-    console.error('[afterdark] SESSION_SECRET is required in production. See .env.example.');
+    // This is the last thing that gets printed before the process leaves, so it
+    // has to be enough on its own. Someone reading it is looking at a host's
+    // log tail with no repo open, wondering why a deploy that built fine will
+    // not stay up.
+    console.error(
+      '\n[afterdark] Refusing to start: SESSION_SECRET is not set.\n'
+      + '  It signs session and age cookies. Without it every restart would\n'
+      + '  either log everyone out or, worse, use a guessable default.\n\n'
+      + '  Render: Dashboard > your service > Environment > Add Environment\n'
+      + '  Variable, key SESSION_SECRET. Deploying via render.yaml (Blueprint)\n'
+      + '  sets this for you; creating the service by hand does not.\n\n'
+      + '  Generate one with:\n'
+      + '    node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'hex\'))"\n'
+    );
     process.exit(1);
   }
   // Development convenience only — sessions and age cookies reset on restart.
