@@ -57,7 +57,12 @@ ENV PORT=8080
 
 # The app has no /health route, so check the shell — it is served by the same
 # Express instance and proves the worker is answering.
-HEALTHCHECK --interval=30s --timeout=4s --start-period=15s --retries=3 \
+#
+# The timeout is deliberately generous. On a fractional-CPU instance a cold
+# start plus a first wire pull can push a response past four seconds, and
+# failing the check there restarts a service that was working — a restart loop
+# caused by measuring, not by anything being wrong.
+HEALTHCHECK --interval=30s --timeout=15s --start-period=90s --retries=5 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "server.js"]

@@ -42,3 +42,12 @@ services:
         value: "1"               # free plan is 0.1 CPU; one worker, not eight
       - key: ADMIN_USERS
         value: admin
+      # Background image work, sized for 0.1 CPU. Without these the encoder
+      # saturates the box and ordinary page loads swing from 60ms to 6s.
+      # Raise them (or just delete them) on a paid instance.
+      - key: SHARP_CONCURRENCY
+        value: "1"
+      - key: ENRICH_LIMIT
+        value: "5"
+      - key: WARM_LIMIT
+        value: "8"

@@ -208,12 +208,19 @@ function startWorker() {
 
     // Fill in Open Graph images for anything posted without one, then tint and
     // pre-render whatever already arrived with its own artwork.
+    // Batch sizes are tunable because the right value depends entirely on how
+    // much CPU the box has. The defaults suit a real server; a 0.1-CPU free
+    // tier wants roughly a third of that, or image warming crowds out the
+    // requests it exists to make faster. Smaller batches are not slower overall
+    // -- the same work happens, just spread across more passes.
+    const ENRICH_LIMIT = Math.max(1, Number(process.env.ENRICH_LIMIT) || 15);
+    const WARM_LIMIT = Math.max(1, Number(process.env.WARM_LIMIT) || 24);
     const { enrichPending, warmPending } = require('./src/enrich');
     const enrich = () => {
-      enrichPending({ limit: 15 })
+      enrichPending({ limit: ENRICH_LIMIT })
         .then((s) => {
           if (s.enriched) console.log(`[media] enriched ${s.enriched}/${s.scanned} posts`);
-          return warmPending({ limit: 24 });
+          return warmPending({ limit: WARM_LIMIT });
         })
         .then((s) => {
           if (s.warmed) console.log(`[media] warmed ${s.warmed}/${s.scanned} feed images`);

@@ -35,6 +35,23 @@ const FETCH_TIMEOUT_MS = 12000;
 fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 /**
+ * Cap libvips' thread pool.
+ *
+ * Left alone, sharp sizes its pool from os.cpus().length -- which reports the
+ * *host's* cores, not the share of a core a container is actually allowed. On a
+ * small instance (Render's free plan is 0.1 CPU) that means eight encode threads
+ * fighting over a tenth of one core, and the event loop loses. Requests that
+ * take 60ms on an idle box take six seconds while a batch of images is warming,
+ * which is long enough for a platform health check to give up and restart the
+ * service.
+ *
+ * Encoding is background work. It is allowed to be slow; it is not allowed to
+ * make the site slow.
+ */
+sharp.concurrency(Math.max(1, Number(process.env.SHARP_CONCURRENCY) || 1));
+sharp.cache({ memory: 32 });
+
+/**
  * Layout slots. Nothing else is renderable, so nothing else is fetchable.
  *
  * The `-blur` variants are how explicit artwork reaches the page: rendered
