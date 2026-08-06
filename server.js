@@ -145,7 +145,9 @@ function startWorker() {
   // session cookie nor the parent DOM. See src/ads.js.
   app.get('/ads/:slot', require('./src/ads').handler);
 
-  app.use('/api/', sameOrigin, attachUser, router);
+  // Presence and traffic counters. After attachUser so a signed-in visitor is
+  // recorded as one, before the router so every API read counts.
+  app.use('/api/', sameOrigin, attachUser, require('./src/analytics').record, router);
 
   app.use(
     express.static(path.join(__dirname, 'public'), {
@@ -178,6 +180,13 @@ function startWorker() {
   // One worker runs the periodic jobs so they don't stampede.
   const isScheduler = process.env.WORKER_INDEX === '0' || WORKERS === 1;
   if (isScheduler) {
+    // Age out presence rows and old counters.
+    const sweepAnalytics = setInterval(() => {
+      const { presence, metrics } = require('./src/analytics').prune();
+      if (presence || metrics) console.log(`[analytics] pruned ${presence} presence, ${metrics} counters`);
+    }, 5 * 60_000);
+    sweepAnalytics.unref();
+
     const hourly = setInterval(() => {
       const removed = pruneSessions();
       if (removed) console.log(`[afterdark] pruned ${removed} expired sessions`);

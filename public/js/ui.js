@@ -312,6 +312,28 @@ export function paintReactions(root, post) {
 
 let adConfig = { enabled: false, slots: [] };
 
+/**
+ * Preview mode: draw every slot as a labelled outline whether or not it filled.
+ *
+ * Slots collapse to nothing when unsold, which is right for readers and
+ * useless for whoever has to check the placements. ?ads=preview turns it on
+ * for the tab, ?ads=off clears it. Nothing reaches the server and it cannot
+ * change what a real visitor sees.
+ */
+const PREVIEW_KEY = 'ad:preview';
+
+export function initAdPreview() {
+  const flag = new URLSearchParams(location.search).get('ads');
+  try {
+    if (flag === 'preview') sessionStorage.setItem(PREVIEW_KEY, '1');
+    if (flag === 'off') sessionStorage.removeItem(PREVIEW_KEY);
+  } catch { /* private mode */ }
+}
+
+const previewing = () => {
+  try { return sessionStorage.getItem(PREVIEW_KEY) === '1'; } catch { return false; }
+};
+
 /** Slots the reader has closed. Session-scoped: a fresh visit gets them back. */
 const dismissed = new Set();
 export const dismissAd = (name) => dismissed.add(name);
@@ -344,6 +366,16 @@ export function adSlot(name, { className = '' } = {}) {
 
   const box = meta.native ? { width: 0, height: meta.height } : ((mobile && meta.mobile) || meta.desktop || meta.mobile);
   const size = meta.native ? `--ad-h:${box.height}px` : `--ad-w:${box.width}px;--ad-h:${box.height}px`;
+
+  if (previewing()) {
+    return `<aside class="adslot adslot--preview${className ? ` ${className}` : ''}"
+                   style="${attr(size)}" data-adslot="${attr(name)}" data-state="filled">
+      <span class="adslot__ghost">
+        <b>${esc(name)}</b>
+        <span>${esc(meta.native ? 'native · fluid' : `${box.width}×${box.height}`)}</span>
+      </span>
+    </aside>`;
+  }
 
   return `<aside class="adslot${meta.native ? ' adslot--native' : ''}${className ? ` ${className}` : ''}"
                  style="${attr(size)}" data-adslot="${attr(name)}" aria-hidden="true">

@@ -8,7 +8,7 @@ import {
   toast, openModal, closeModal, isModalOpen, voteColumn, votePill, paintVote,
   postCard, feedList, commentTree, media, playVideo, newsLead, newsGrid, sectionHead,
   skeleton, emptyState, errorState, reactionBar, reactionPicker, topicChips,
-  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd,
+  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd, initAdPreview,
   awardRibbon, awardPicker,
 } from './ui.js';
 import { icon, boardIcon } from './icons.js';
@@ -85,6 +85,7 @@ async function refreshMe() {
 async function boot() {
   await refreshMe();
 
+  initAdPreview();
   watchSystemTheme();
   watchAdSlots();
   watchTopbar();
@@ -318,6 +319,7 @@ function renderLeftRail() {
         ${feedLink('/sites', 'Directory', 'compass', path === '/sites')}
         ${feedLink('/communities', 'Communities', 'users', path === '/communities')}
         ${state.me ? feedLink('/settings', 'Settings', 'wrench', path === '/settings') : ''}
+        ${state.me?.role === 'admin' ? feedLink('/admin', 'Admin', 'chart', path.startsWith('/admin')) : ''}
       </div>
     </nav>
 
@@ -546,6 +548,9 @@ const ROUTES = [
   [/^\/messages\/?$/, () => viewMessages(null)],
   [/^\/messages\/(\d+)\/?$/, viewMessages],
   [/^\/settings\/?$/, viewSettings],
+  [/^\/admin\/?$/, viewAdmin],
+  [/^\/admin\/people\/?$/, viewAdminPeople],
+  [/^\/admin\/content\/?$/, viewAdminContent],
   [/^\/feeds\/?$/, viewFeedManager],
   [/^\/f\/([\w-]+)\/?$/, viewCustomFeed],
   [/^\/popular\/?$/, () => viewFeed('popular')],
@@ -795,6 +800,251 @@ function rulesPanel(board) {
       : ''}
     ${board.canConfigure ? `<a class="btn btn--sm" href="/b/${attr(board.slug)}/settings" data-link>${icon('wrench', { size: 14 })} Manage</a>` : ''}
   </details>`;
+}
+
+// ---------------------------------------------------------------------------
+// Admin panel
+// ---------------------------------------------------------------------------
+
+let adminTimer = null;
+
+/** A bar chart in a span. No library, no canvas, no layout thrash. */
+function sparkline(points, { height = 34 } = {}) {
+  if (!points.length) return '';
+  const peak = Math.max(1, ...points.map((p) => p.n));
+  return `<span class="spark" style="--spark-h:${height}px" aria-hidden="true">${points
+    .map((p) => `<i style="height:${Math.max(2, Math.round((p.n / peak) * height))}px" title="${p.n}"></i>`)
+    .join('')}</span>`;
+}
+
+const statTile = (label, value, hint = '') => `
+  <div class="atile">
+    <span class="atile__value">${esc(String(value))}</span>
+    <span class="atile__label">${esc(label)}</span>
+    ${hint ? `<span class="atile__hint">${esc(hint)}</span>` : ''}
+  </div>`;
+
+async function viewAdmin() {
+  if (!state.me || state.me.role !== 'admin') {
+    view.innerHTML = emptyState('Admins only', 'This panel is restricted to site administrators.');
+    return;
+  }
+
+  const [live, overview] = await Promise.all([
+    api.get('/admin/live'),
+    api.get('/admin/overview'),
+  ]);
+
+  const uptime = (s) => (s < 3600 ? `${Math.round(s / 60)}m` : s < 86400 ? `${Math.round(s / 3600)}h` : `${Math.round(s / 86400)}d`);
+
+  view.innerHTML = `
+    <div class="news-hero news-hero--slim">
+      <span class="news-hero__kicker">${icon('chart', { size: 13 })} Admin</span>
+      <h1>Right now</h1>
+      <p>Live figures, refreshed every ten seconds. Nothing here can tell you what an
+         individual visitor is reading — that data is deliberately never assembled.</p>
+    </div>
+
+    <div class="tabs tabs--sticky" role="tablist">
+      <a class="tab" role="tab" aria-selected="true" href="/admin" data-link>${icon('radio', { size: 15 })} Live</a>
+      <a class="tab" role="tab" aria-selected="false" href="/admin/people" data-link>${icon('users', { size: 15 })} People</a>
+      <a class="tab" role="tab" aria-selected="false" href="/admin/content" data-link>${icon('layers', { size: 15 })} Content</a>
+      <span class="tabs__spacer"></span>
+      <a class="tab" href="/mod" data-link>${icon('shield', { size: 15 })} Queue${overview.moderation.openReports ? ` <span class="tab__n">${overview.moderation.openReports}</span>` : ''}</a>
+    </div>
+
+    <section class="panel apanel" id="admin-live">
+      <p class="panel__title">${icon('radio', { size: 13 })} Online now</p>
+      <div class="agrid">
+        ${statTile('online', num(live.online), `last ${live.windowMinutes} min`)}
+        ${statTile('signed in', num(live.signedIn))}
+        ${statTile('anonymous', num(live.anonymous))}
+        ${statTile('req/min', num(live.requests.lastMinute))}
+      </div>
+
+      <p class="panel__title" style="margin-top:16px">Requests, last hour</p>
+      ${sparkline(live.requests.series)}
+      <p class="atile__hint">${num(live.requests.lastHour)} requests · ${num(live.visits.lastHour)} page views</p>
+
+      ${live.byPath.length ? `
+        <p class="panel__title" style="margin-top:16px">Where they are</p>
+        <ul class="alist">
+          ${live.byPath.map((p) => `
+            <li><a href="${attr(p.path)}" data-link>${esc(p.path)}</a><b>${p.n}</b></li>`).join('')}
+        </ul>` : ''}
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">${icon('layers', { size: 13 })} Content</p>
+      <div class="agrid">
+        ${statTile('posts', num(overview.content.posts), `+${overview.content.postsToday} today`)}
+        ${statTile('comments', num(overview.content.comments), `+${overview.content.commentsToday} today`)}
+        ${statTile('boards', num(overview.content.boards))}
+        ${statTile('members', num(overview.people.users), `+${overview.people.newToday} today`)}
+      </div>
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">${icon('shieldCheck', { size: 13 })} Moderation</p>
+      <div class="agrid">
+        ${statTile('open reports', num(overview.moderation.openReports))}
+        ${statTile('actions today', num(overview.moderation.actionsToday))}
+        ${statTile('suspended', num(overview.people.banned))}
+        ${statTile('active this week', num(overview.people.activeWeek))}
+      </div>
+      ${overview.moderation.topRules.length ? `
+        <p class="panel__title" style="margin-top:16px">Most-cited rules</p>
+        <ul class="alist">
+          ${overview.moderation.topRules.map((r) => `
+            <li><span>${esc(r.title)} <em>/b/${esc(r.board)}</em></span><b>${r.cited}</b></li>`).join('')}
+        </ul>` : '<p class="panel__note">No rule has been cited in a removal yet.</p>'}
+    </section>
+
+    <section class="panel${overview.wire.broken.length ? ' panel--warn' : ''}">
+      <p class="panel__title">${icon('radio', { size: 13 })} Wire</p>
+      <div class="agrid">
+        ${statTile('healthy', `${overview.wire.healthy}/${overview.wire.enabled}`)}
+        ${statTile('last run', overview.wire.lastRunAt ? timeAgo(overview.wire.lastRunAt) : 'never')}
+        ${statTile('registered', num(overview.wire.sources))}
+      </div>
+      ${overview.wire.broken.length ? `
+        <ul class="alist alist--warn">
+          ${overview.wire.broken.map((s) => `
+            <li><span>${esc(s.name)} <em>${esc(s.status)}</em></span><b>${esc((s.error || '').slice(0, 40))}</b></li>`).join('')}
+        </ul>` : ''}
+      <button class="btn btn--sm" data-refresh-wire>Pull now</button>
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">${icon('wrench', { size: 13 })} This worker</p>
+      <div class="agrid">
+        ${statTile('uptime', uptime(overview.system.uptimeSeconds))}
+        ${statTile('memory', `${overview.system.rssMb} MB`, `${overview.system.heapMb} MB heap`)}
+        ${statTile('database', `${overview.system.dbMb} MB`)}
+        ${statTile('worker', String(overview.system.workerIndex), `pid ${overview.system.workerPid}`)}
+      </div>
+      <p class="panel__note">
+        Figures are per worker — there are several behind the load balancer, so memory and uptime
+        describe whichever one answered this request. Presence and counters are shared, so those
+        are site-wide.
+      </p>
+    </section>`;
+
+  startAdminPolling();
+}
+
+/** Refresh only the live block, so the page does not flicker every ten seconds. */
+function startAdminPolling() {
+  clearInterval(adminTimer);
+  adminTimer = setInterval(async () => {
+    const host = document.getElementById('admin-live');
+    if (!host || document.hidden || !location.pathname.startsWith('/admin')) {
+      if (!location.pathname.startsWith('/admin')) clearInterval(adminTimer);
+      return;
+    }
+    try {
+      const live = await api.get('/admin/live');
+      host.querySelectorAll('.atile__value')[0].textContent = num(live.online);
+      host.querySelectorAll('.atile__value')[1].textContent = num(live.signedIn);
+      host.querySelectorAll('.atile__value')[2].textContent = num(live.anonymous);
+      host.querySelectorAll('.atile__value')[3].textContent = num(live.requests.lastMinute);
+      const spark = host.querySelector('.spark');
+      if (spark) spark.outerHTML = sparkline(live.requests.series);
+    } catch { /* a failed poll is not worth a toast */ }
+  }, 10000);
+}
+
+async function viewAdminPeople() {
+  if (!state.me || state.me.role !== 'admin') {
+    view.innerHTML = emptyState('Admins only', 'This panel is restricted to site administrators.');
+    return;
+  }
+  const d = await api.get('/admin/people');
+  const row = (u, extra = '') => `
+    <li>
+      <a href="/u/${attr(u.username)}" data-link>${esc(u.username)}</a>
+      ${u.role && u.role !== 'user' ? `<span class="badge badge--mod">${esc(u.role)}</span>` : ''}
+      <b>${extra}</b>
+    </li>`;
+
+  view.innerHTML = `
+    <div class="news-hero news-hero--slim">
+      <span class="news-hero__kicker">${icon('users', { size: 13 })} Admin</span>
+      <h1>People</h1>
+    </div>
+    <div class="tabs tabs--sticky" role="tablist">
+      <a class="tab" href="/admin" data-link>${icon('radio', { size: 15 })} Live</a>
+      <a class="tab" aria-selected="true" href="/admin/people" data-link>${icon('users', { size: 15 })} People</a>
+      <a class="tab" href="/admin/content" data-link>${icon('layers', { size: 15 })} Content</a>
+    </div>
+
+    <section class="panel">
+      <p class="panel__title">Most active this week</p>
+      <ul class="alist">${d.mostActive.map((u) => row(u, `${u.posts}p · ${u.comments}c`)).join('') || '<li><span>Nobody yet</span></li>'}</ul>
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">Newest accounts</p>
+      <ul class="alist">${d.newest.map((u) => row(u, timeAgo(u.created_at))).join('')}</ul>
+    </section>
+
+    ${d.suspended.length ? `
+      <section class="panel panel--warn">
+        <p class="panel__title">Suspended</p>
+        <ul class="alist">${d.suspended.map((u) => `
+          <li><a href="/u/${attr(u.username)}" data-link>${esc(u.username)}</a>
+              <span>${esc(u.ban_reason || 'no reason recorded')}</span>
+              <b>until ${esc(fullDate(u.banned_until))}</b></li>`).join('')}</ul>
+      </section>` : ''}`;
+}
+
+async function viewAdminContent() {
+  if (!state.me || state.me.role !== 'admin') {
+    view.innerHTML = emptyState('Admins only', 'This panel is restricted to site administrators.');
+    return;
+  }
+  const d = await api.get('/admin/content');
+  view.innerHTML = `
+    <div class="news-hero news-hero--slim">
+      <span class="news-hero__kicker">${icon('layers', { size: 13 })} Admin</span>
+      <h1>Content</h1>
+    </div>
+    <div class="tabs tabs--sticky" role="tablist">
+      <a class="tab" href="/admin" data-link>${icon('radio', { size: 15 })} Live</a>
+      <a class="tab" href="/admin/people" data-link>${icon('users', { size: 15 })} People</a>
+      <a class="tab" aria-selected="true" href="/admin/content" data-link>${icon('layers', { size: 15 })} Content</a>
+    </div>
+
+    <section class="panel">
+      <p class="panel__title">Boards</p>
+      <ul class="alist">
+        ${d.boards.map((b) => `
+          <li>
+            <a href="/b/${attr(b.slug)}" data-link>${esc(b.name)}</a>
+            ${b.firehose ? '<span class="badge badge--mod">firehose</span>' : ''}
+            <span>${num(b.members)} members</span>
+            <b>${num(b.posts)} posts${b.today ? ` · +${b.today}` : ''}</b>
+          </li>`).join('')}
+      </ul>
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">Top posts this week</p>
+      <ul class="alist">
+        ${d.topPosts.map((p) => `
+          <li><a href="/p/${p.id}" data-link>${esc(p.title.slice(0, 58))}</a>
+              <span>${esc(p.board)}</span>
+              <b>${num(p.score)} · ${num(p.comments)}c</b></li>`).join('')}
+      </ul>
+    </section>
+
+    <section class="panel">
+      <p class="panel__title">Posts by source</p>
+      <ul class="alist">
+        ${d.sources.map((s) => `
+          <li><span>${esc(s.id)}</span><b>${num(s.posts)}</b></li>`).join('')}
+      </ul>
+    </section>`;
 }
 
 // ---------------------------------------------------------------------------

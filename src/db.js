@@ -289,6 +289,38 @@ CREATE TABLE IF NOT EXISTS blocks (
   PRIMARY KEY (user_id, blocked_id)
 );
 
+-- Who is here right now.
+--
+-- In SQLite rather than in memory because there are eight workers behind the
+-- OS load balancer and a visitor's requests land on whichever is free — an
+-- in-process Set would count the same person up to eight times and undercount
+-- everyone else.
+--
+-- The identifier is an HMAC of the session token or IP, so this table cannot be
+-- turned back into a list of addresses. The path column exists for the
+-- aggregate view ("14 people on /b/videos") and nothing keeps per-visitor
+-- history: on an adult
+-- site a log of who read what is the single most dangerous thing you could
+-- keep, and the panel is built so it never has to exist.
+CREATE TABLE IF NOT EXISTS presence (
+  id            TEXT PRIMARY KEY,
+  user_id       INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  path          TEXT NOT NULL DEFAULT '',
+  first_seen_at INTEGER NOT NULL,
+  last_seen_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_presence_seen ON presence(last_seen_at DESC);
+
+-- Minute-bucketed counters. Aggregate from the moment they are written, so
+-- there is never a per-request row to leak or subpoena.
+CREATE TABLE IF NOT EXISTS metrics (
+  bucket INTEGER NOT NULL,
+  kind   TEXT NOT NULL,
+  n      INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (bucket, kind)
+);
+CREATE INDEX IF NOT EXISTS idx_metrics_bucket ON metrics(bucket DESC);
+
 -- The directory: adult platforms, grouped by what they actually are.
 CREATE TABLE IF NOT EXISTS sites (
   id         INTEGER PRIMARY KEY,

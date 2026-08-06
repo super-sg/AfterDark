@@ -15,6 +15,8 @@ const sources = require('./sources');
 const ads = require('./ads');
 const sites = require('./sites');
 const social = require('./social');
+const analytics = require('./analytics');
+const fs = require('node:fs');
 
 const router = express.Router();
 
@@ -26,6 +28,16 @@ const statsCache = new TTLCache({ max: 8, ttl: 10000 });
 const postCache = new TTLCache({ max: 2000, ttl: 3000 });
 
 const AGE_MODE = process.env.AGE_ASSURANCE_MODE || 'self';
+
+/** On-disk size of the database, WAL included. Best-effort. */
+function dbSizeBytes() {
+  const { DB_PATH } = require('./db');
+  let total = 0;
+  for (const suffix of ['', '-wal', '-shm']) {
+    try { total += fs.statSync(DB_PATH + suffix).size; } catch { /* absent */ }
+  }
+  return total;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -380,6 +392,129 @@ function notifyAboutComment({ commentId, postId, post, parentId, actor, body }) 
     notify(mentioned?.id, 'mention', `${actor.username} mentioned you`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Admin
+//
+// Everything here is admin-gated and read-only except the source toggles.
+// Note what is deliberately absent: there is no endpoint that returns a
+// visitor alongside the page they are reading. On a site like this, being able
+// to answer "what is this person looking at" is a liability rather than a
+// feature, so the data to answer it is never assembled.
+// ---------------------------------------------------------------------------
+
+const requireAdmin = (req, res, next) =>
+  (req.user && req.user.role === 'admin' ? next() : fail(res, 403, 'Admins only.'));
+
+router.get('/admin/live', auth.requireUser, requireAdmin, (req, res) => {
+  const live = analytics.live();
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    ...live,
+    windowMinutes: Math.round(analytics.PRESENCE_TTL_MS / 60000),
+    requests: {
+      lastMinute: analytics.totals('requests', 1),
+      lastHour: analytics.totals('requests', 60),
+      series: analytics.series('requests', 60),
+    },
+    visits: {
+      lastHour: analytics.totals('visits', 60),
+      lastDay: analytics.totals('visits', 1440),
+      series: analytics.series('visits', 60),
+    },
+  });
+});
+
+router.get('/admin/overview', auth.requireUser, requireAdmin, (req, res) => {
+  const DAY = 86400e3;
+  const wire = sources.all();
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    content: {
+      posts: store.posts.countSince(0),
+      postsToday: store.posts.countSince(Date.now() - DAY),
+      comments: store.comments.countSince(0),
+      commentsToday: store.comments.countSince(Date.now() - DAY),
+      boards: store.boards.all().length,
+    },
+    people: {
+      users: store.users.count(),
+      activeToday: store.users.activeSince(Date.now() - DAY),
+      activeWeek: store.users.activeSince(Date.now() - 7 * DAY),
+      newToday: db.prepare('SELECT COUNT(*) AS n FROM users WHERE created_at > ?').get(Date.now() - DAY).n,
+      banned: db.prepare('SELECT COUNT(*) AS n FROM users WHERE banned_until > ?').get(Date.now()).n,
+    },
+    moderation: {
+      openReports: store.reports.openCount(),
+      actionsToday: db.prepare('SELECT COUNT(*) AS n FROM mod_actions WHERE created_at > ?').get(Date.now() - DAY).n,
+      topRules: db.prepare(`
+        SELECT r.title, r.cited_count AS cited, b.slug AS board
+          FROM board_rules r JOIN boards b ON b.id = r.board_id
+         WHERE r.cited_count > 0 ORDER BY r.cited_count DESC LIMIT 6
+      `).all(),
+    },
+    wire: {
+      sources: wire.length,
+      enabled: wire.filter((s) => s.enabled).length,
+      healthy: wire.filter((s) => s.enabled && s.lastStatus === 'ok').length,
+      lastRunAt: Math.max(0, ...wire.map((s) => s.lastRunAt || 0)) || null,
+      broken: wire.filter((s) => s.enabled && s.lastStatus && s.lastStatus !== 'ok')
+        .map((s) => ({ id: s.id, name: s.name, status: s.lastStatus, error: s.lastError })),
+    },
+    system: {
+      uptimeSeconds: Math.round(process.uptime()),
+      rssMb: Math.round(process.memoryUsage().rss / 1048576),
+      heapMb: Math.round(process.memoryUsage().heapUsed / 1048576),
+      workerPid: process.pid,
+      workerIndex: process.env.WORKER_INDEX ?? 'single',
+      node: process.version,
+      dbMb: Math.round(dbSizeBytes() / 1048576 * 10) / 10,
+    },
+  });
+});
+
+router.get('/admin/people', auth.requireUser, requireAdmin, (req, res) => {
+  const DAY = 86400e3;
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    newest: db.prepare(`
+      SELECT username, role, created_at, last_seen_at, post_karma, comment_karma
+        FROM users ORDER BY created_at DESC LIMIT 20
+    `).all(),
+    mostActive: db.prepare(`
+      SELECT u.username, u.role,
+             (SELECT COUNT(*) FROM posts p WHERE p.author_id = u.id AND p.created_at > ?) AS posts,
+             (SELECT COUNT(*) FROM comments c WHERE c.author_id = u.id AND c.created_at > ?) AS comments
+        FROM users u ORDER BY (posts + comments) DESC LIMIT 12
+    `).all(Date.now() - 7 * DAY, Date.now() - 7 * DAY).filter((u) => u.posts + u.comments > 0),
+    suspended: db.prepare(`
+      SELECT username, banned_until, ban_reason FROM users
+       WHERE banned_until > ? ORDER BY banned_until DESC LIMIT 20
+    `).all(Date.now()),
+  });
+});
+
+router.get('/admin/content', auth.requireUser, requireAdmin, (req, res) => {
+  const DAY = 86400e3;
+  res.set('Cache-Control', 'no-store');
+  res.json({
+    boards: db.prepare(`
+      SELECT b.slug, b.name, b.post_count AS posts, b.member_count AS members, b.firehose,
+             (SELECT COUNT(*) FROM posts p WHERE p.board_id = b.id AND p.created_at > ?) AS today
+        FROM boards b ORDER BY today DESC, posts DESC
+    `).all(Date.now() - DAY),
+    topPosts: db.prepare(`
+      SELECT p.id, p.title, p.score, p.comment_count AS comments, b.name AS board
+        FROM posts p JOIN boards b ON b.id = p.board_id
+       WHERE p.removed = 0 AND p.created_at > ?
+       ORDER BY p.score DESC LIMIT 10
+    `).all(Date.now() - 7 * DAY),
+    sources: db.prepare(`
+      SELECT source_id AS id, COUNT(*) AS posts, MAX(published_at) AS newest
+        FROM posts WHERE source_id != '' GROUP BY source_id ORDER BY posts DESC
+    `).all(),
+  });
+});
 
 // ---------------------------------------------------------------------------
 // Inbox — notifications and direct messages

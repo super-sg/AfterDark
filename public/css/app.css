@@ -3966,3 +3966,79 @@ html { scroll-behavior: smooth; }
 .wirelive--stale .wirelive__dot { background: var(--text-faint); animation: none; }
 
 @media (prefers-reduced-motion: reduce) { .wirelive__dot { animation: none; } }
+
+/* Preview mode (?ads=preview): show every slot as a labelled outline so the
+   placements can be audited without live inventory. Never seen by a reader. */
+.adslot--preview {
+  display: grid;
+  place-items: center;
+  height: auto;
+  min-height: var(--ad-h, 90px);
+  margin: 0 auto 14px;
+  opacity: 1;
+  border: 1px dashed var(--accent-line);
+  border-radius: var(--radius-sm);
+  background: repeating-linear-gradient(
+    -45deg, var(--accent-soft) 0 8px, transparent 8px 16px
+  );
+}
+
+.adslot__ghost {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font: 700 11px/1.3 var(--mono);
+  color: var(--accent-ink);
+  text-align: center;
+}
+.adslot__ghost span { font-weight: 500; opacity: 0.75; font-size: 10px; }
+
+.sticky-ad .adslot--preview { margin: 0; }
+
+/* ===========================================================================
+   Admin panel
+   =========================================================================== */
+
+.agrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1px; background: var(--line-soft); border-radius: var(--radius-sm); overflow: hidden; }
+
+.atile { display: flex; flex-direction: column; gap: 1px; padding: 12px 13px; background: var(--surface); }
+.atile__value { font: 800 22px/1.1 var(--sans); letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+.atile__label { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-faint); }
+.atile__hint { font-size: 11px; color: var(--text-faint); }
+
+/* Bar chart made of spans. No canvas, no library, no reflow per frame. */
+.spark { display: flex; align-items: flex-end; gap: 1px; height: var(--spark-h, 34px); margin: 4px 0 6px; }
+.spark i {
+  flex: 1;
+  min-width: 1px;
+  background: var(--accent);
+  opacity: 0.55;
+  border-radius: 1px 1px 0 0;
+  transition: height 0.3s var(--ease-out);
+}
+.spark i:last-child { opacity: 1; }
+
+.alist { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 1px; }
+.alist li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 7px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.alist li:hover { background: var(--surface-2); }
+.alist li a { color: var(--text); font-weight: 600; }
+.alist li em { font-style: normal; font-size: 11px; color: var(--text-faint); }
+.alist li span { color: var(--text-dim); font-size: 12px; }
+.alist li b {
+  margin-left: auto;
+  font: 700 12px/1 var(--mono);
+  color: var(--accent-ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.alist--warn li b { color: var(--text-faint); font-weight: 500; }
+
+.apanel { position: relative; }
