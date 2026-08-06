@@ -32,11 +32,12 @@ const ENABLED = process.env.ADS_ENABLED !== '0';
  * `atOptions` object and then loads the matching invoke script.
  */
 const UNITS = {
-  leaderboard: { key: '706391201d37146b3f5648b9f60cc563', width: 728, height: 90 },
-  mobileBanner: { key: '6296b31152b76c8eb8736eee3f7432ed', width: 320, height: 50 },
-  skyscraper: { key: 'fbcbdb2eff3398fdb549b7484177176a', width: 160, height: 600 },
-  rectangle: { key: 'ea92ef6e3159844ad092369efe6f02ed', width: 300, height: 250 },
-  banner: { key: '4a49d14c6e857ca46740887d05bfb6bf', width: 468, height: 60 },
+  leaderboard: { key: 'f1e5e7079b5c4940c564196b07236884', width: 728, height: 90 },
+  rectangle: { key: '2dce7e938b5a6c5ed772e4bf63f2e76b', width: 300, height: 250 },
+  skyscraper: { key: 'b15c0ac6d8949dbf6e6e6b8f54faaca0', width: 160, height: 600 },
+  mobileBanner: { key: 'cd4c2b0236320b682d8ee8ca10abfee0', width: 320, height: 50 },
+  halfTower: { key: '8fcbbc5e27276cacc67255616e36ad44', width: 160, height: 300 },
+  banner: { key: 'e308ee2af40bd02bb82dcb6c6b5788b4', width: 468, height: 60 },
 };
 
 /** The native-recommendation widget sizes itself, so it has no fixed box. */
@@ -45,6 +46,29 @@ const NATIVE = {
   container: 'container-8d23cadd0711f190c1e11b03a64021b8',
   height: 320,
 };
+
+/**
+ * The "smart link" is a plain URL rather than a script, which makes it the one
+ * high-yield format that needs no exception anywhere: it renders as an ordinary
+ * anchor, styled as a sponsored tile, and the reader can see where it goes
+ * before they click.
+ */
+const SMART_LINK = process.env.ADS_SMART_LINK
+  || 'https://www.effectivecpmnetwork.com/eb1td9698?key=89d1af2c90f080c1f9bcbdf2e4a51d03';
+
+/**
+ * Pop-under. Off unless ADS_POPUNDER=1, and then capped at once per session.
+ *
+ * It works from inside the sandbox because the frame carries allow-popups, so
+ * unlike the social bar it costs no architectural exception. What it costs is
+ * retention: a pop-under is the format readers most reliably punish, and this
+ * site's whole premise is people coming back to argue in the comments. Shipped
+ * behind a flag so the choice is explicit rather than inherited.
+ */
+const POPUNDER = process.env.ADS_POPUNDER === '1'
+  ? 'https://pl30723499.effectivecpmnetwork.com/a2/14/5a/a2145ad7b1da3787c6e8122370de8d23.js'
+  : '';
+const POPUNDER_HOST = 'https://pl30723499.effectivecpmnetwork.com';
 
 const BANNER_HOST = 'https://www.highperformanceformat.com';
 const NATIVE_HOST = 'https://pl30412496.effectivecpmnetwork.com';
@@ -67,6 +91,7 @@ const SLOTS = {
   // --- left rail, under the navigation -------------------------------------
   railLeft: { desktop: 'rectangle', mobile: null, label: 'Advertisement' },
   railLeftTall: { desktop: 'skyscraper', mobile: null, label: 'Advertisement' },
+  railHalf: { desktop: 'halfTower', mobile: null, label: 'Advertisement' },
 
   // --- article page --------------------------------------------------------
   article: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
@@ -80,6 +105,10 @@ const SLOTS = {
 
   // --- infinite scroll: one between each appended page ---------------------
   page: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  // --- navigation drawer ---------------------------------------------------
+  drawerTop: { desktop: 'halfTower', mobile: 'mobileBanner', label: 'Advertisement' },
+  drawerTall: { desktop: 'skyscraper', mobile: null, label: 'Advertisement' },
 
   // --- always present ------------------------------------------------------
   footer: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
@@ -145,6 +174,13 @@ const PROBE = `
 </script>`;
 
 function frameHtml(slotName, variant) {
+  if (slotName === 'popunder') {
+    if (!POPUNDER) return null;
+    return `<!doctype html><html><head><meta charset="utf-8"></head><body>
+<script src="${POPUNDER}"></script>
+</body></html>`;
+  }
+
   const slot = SLOTS[slotName];
   if (!slot) return null;
 
@@ -187,11 +223,11 @@ ${PROBE}
  */
 const FRAME_CSP = [
   "default-src 'none'",
-  `script-src 'unsafe-inline' ${BANNER_HOST} ${NATIVE_HOST}`,
+  `script-src 'unsafe-inline' ${BANNER_HOST} ${NATIVE_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "style-src 'unsafe-inline'",
   'img-src https: data:',
   'frame-src https:',
-  `connect-src ${BANNER_HOST} ${NATIVE_HOST}`,
+  `connect-src ${BANNER_HOST} ${NATIVE_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "form-action 'none'",
 ].join('; ');
 
@@ -214,6 +250,8 @@ function slotMeta(name) {
 const config = () => ({
   enabled: ENABLED,
   slots: Object.keys(SLOTS).map(slotMeta),
+  smartLink: SMART_LINK,
+  popunder: !!POPUNDER,
 });
 
 /** Express handler for `/ads/:slot`. */
@@ -235,4 +273,4 @@ function handler(req, res) {
   res.end(html);
 }
 
-module.exports = { handler, config, slotMeta, frameHtml, SLOTS, UNITS, FRAME_CSP, ENABLED };
+module.exports = { handler, config, slotMeta, frameHtml, SLOTS, UNITS, FRAME_CSP, ENABLED, SMART_LINK };

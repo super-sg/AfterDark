@@ -337,6 +337,7 @@ const previewing = () => {
 /** Slots the reader has closed. Session-scoped: a fresh visit gets them back. */
 const dismissed = new Set();
 export const dismissAd = (name) => dismissed.add(name);
+export const adConfigSmartLink = () => (adConfig.enabled ? adConfig.smartLink || '' : '');
 export const setAdConfig = (cfg) => { adConfig = cfg || { enabled: false, slots: [] }; };
 
 const SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';

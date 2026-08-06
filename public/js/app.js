@@ -8,7 +8,7 @@ import {
   toast, openModal, closeModal, isModalOpen, voteColumn, votePill, paintVote,
   postCard, feedList, commentTree, media, playVideo, newsLead, newsGrid, sectionHead,
   skeleton, emptyState, errorState, reactionBar, reactionPicker, topicChips,
-  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd, initAdPreview,
+  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd, initAdPreview, adConfigSmartLink,
   awardRibbon, awardPicker,
 } from './ui.js';
 import { icon, boardIcon } from './icons.js';
@@ -215,6 +215,131 @@ async function loadTicker() {
 // ---------------------------------------------------------------------------
 // Chrome
 // ---------------------------------------------------------------------------
+
+/**
+ * The navigation drawer.
+ *
+ * It used to be a phone-only slide-out whose styling lived inside a max-width
+ * query, while the button itself was visible at every width — so on a desktop
+ * pressing it toggled a class nothing listened to. Visible and inert is the
+ * worst state a control can be in.
+ *
+ * It now opens at any width, and on desktop it earns the space by carrying what
+ * the rail has no room for: every board, the full account menu, and a tall ad
+ * column that has nowhere else to live.
+ */
+function drawerMarkup() {
+  const path = location.pathname;
+
+  const link = (href, label, iconName, current) => `
+    <a class="drawer__link" href="${attr(href)}" data-link ${current ? 'aria-current="page"' : ''}>
+      <span class="drawer__icon">${icon(iconName, { size: 16 })}</span>${esc(label)}
+    </a>`;
+
+  const board = (b) => `
+    <a class="drawer__link" href="/b/${attr(b.slug)}" data-link
+       ${path === `/b/${b.slug}` ? 'aria-current="page"' : ''}>
+      <span class="drawer__icon drawer__icon--board" style="--board-accent:${attr(b.accent)}">${boardIcon(b.slug, { size: 15 })}</span>
+      ${esc(b.name)}<span class="drawer__count">${num(b.postCount)}</span>
+    </a>`;
+
+  const desks = state.boards.filter((b) => b.official);
+  const founded = state.boards.filter((b) => !b.official);
+
+  return `
+    <div class="drawer__backdrop"></div>
+    <aside class="drawer__panel" role="dialog" aria-modal="true" aria-label="Navigation">
+      <header class="drawer__head">
+        <span class="drawer__title">Browse</span>
+        <button class="icon-btn" data-drawer-close aria-label="Close navigation">${icon('close', { size: 18 })}</button>
+      </header>
+
+      <div class="drawer__scroll">
+        <nav class="drawer__group">
+          ${link('/', 'Home', 'home', path === '/')}
+          ${link('/popular', 'Popular', 'flame', path === '/popular')}
+          ${link('/all', 'All', 'layers', path === '/all')}
+          ${link('/news', 'Newsroom', 'newspaper', path === '/news')}
+          ${link('/sites', 'Directory', 'compass', path === '/sites')}
+          ${link('/communities', 'Communities', 'users', path === '/communities')}
+        </nav>
+
+        ${adSlot('drawerTop', { className: 'adslot--drawer' })}
+
+        ${state.me ? `
+          <p class="drawer__label">Your account</p>
+          <nav class="drawer__group">
+            ${link('/u/' + state.me.username, state.me.username, 'user', false)}
+            ${link('/inbox', 'Inbox', 'bell', path === '/inbox')}
+            ${link('/messages', 'Messages', 'messages', path === '/messages')}
+            ${link('/saved', 'Saved', 'bookmark', path === '/saved')}
+            ${link('/feeds', 'Custom feeds', 'layers', path === '/feeds')}
+            ${link('/settings', 'Settings', 'wrench', path === '/settings')}
+            ${isStaff() ? link('/mod', 'Mod queue', 'shield', path === '/mod') : ''}
+            ${state.me.role === 'admin' ? link('/admin', 'Admin', 'chart', path.startsWith('/admin')) : ''}
+          </nav>` : `
+          <nav class="drawer__group">
+            <button class="drawer__link" data-auth="login">
+              <span class="drawer__icon">${icon('user', { size: 16 })}</span>Sign in</button>
+            <button class="drawer__link" data-auth="register">
+              <span class="drawer__icon">${icon('plus', { size: 16 })}</span>Create an account</button>
+          </nav>`}
+
+        <p class="drawer__label">Site desks</p>
+        <nav class="drawer__group">${desks.map(board).join('')}</nav>
+
+        ${founded.length ? `
+          <p class="drawer__label">Communities</p>
+          <nav class="drawer__group">${founded.map(board).join('')}</nav>` : ''}
+
+        <a class="drawer__found" href="/create" data-link>${icon('plus', { size: 15 })} Found a community</a>
+
+        ${adSlot('drawerTall', { className: 'adslot--drawer' })}
+        ${smartLinkTile()}
+      </div>
+    </aside>`;
+}
+
+function openDrawer() {
+  const host = qs('#drawer');
+  host.innerHTML = drawerMarkup();
+  document.body.classList.add('nav-open');
+  host.querySelector('[data-drawer-close]')?.focus();
+}
+
+function closeDrawer() {
+  if (!document.body.classList.contains('nav-open')) return;
+  document.body.classList.remove('nav-open');
+  // Let the slide-out play before tearing the markup down, or it disappears
+  // instead of leaving.
+  setTimeout(() => {
+    if (!document.body.classList.contains('nav-open')) qs('#drawer').innerHTML = '';
+  }, 240);
+}
+
+const toggleDrawer = () =>
+  (document.body.classList.contains('nav-open') ? closeDrawer() : openDrawer());
+
+/**
+ * The sponsored tile.
+ *
+ * Adsterra's "smart link" is a URL rather than a script, which makes it the one
+ * high-yield format needing no exception anywhere — no inline script, no
+ * third-party host in the CSP, and the reader can see where it goes before
+ * clicking. Labelled, because an ad dressed as navigation is a dark pattern.
+ */
+function smartLinkTile() {
+  const url = adConfigSmartLink();
+  if (!url) return '';
+  return `<a class="smartlink" href="${attr(url)}" target="_blank" rel="noopener nofollow sponsored">
+    <span class="smartlink__label">Sponsored</span>
+    <span class="smartlink__body">
+      <b>Featured offers</b>
+      <span>Picked for adults. Opens in a new tab.</span>
+    </span>
+    ${icon('externalLink', { size: 14 })}
+  </a>`;
+}
 
 function renderTopbarNav() {
   const nav = qs('#topbar-nav');
@@ -572,7 +697,7 @@ function navigate(href, { replace = false } = {}) {
   state.scrollMemory.set(location.pathname + location.search, window.scrollY);
   if (replace) history.replaceState({}, '', url);
   else history.pushState({}, '', url);
-  document.body.classList.remove('nav-open');
+  closeDrawer();
   route();
 }
 
@@ -2546,6 +2671,9 @@ document.addEventListener('keydown', (event) => {
       event.preventDefault();
       qs('#search-input').focus();
       break;
+    case 'Escape':
+      if (document.body.classList.contains('nav-open')) { closeDrawer(); return; }
+      break;
     case '?':
       if (!isModalOpen()) shortcutsModal();
       break;
@@ -3156,11 +3284,17 @@ document.addEventListener('click', async (event) => {
   }
 
   if (target.closest('#menu-toggle')) {
-    document.body.classList.toggle('nav-open');
+    event.preventDefault();
+    toggleDrawer();
     return;
   }
-  if (document.body.classList.contains('nav-open') && !target.closest('.rail--left')) {
-    document.body.classList.remove('nav-open');
+  if (target.closest('[data-drawer-close]')) {
+    event.preventDefault();
+    closeDrawer();
+    return;
+  }
+  if (document.body.classList.contains('nav-open') && !target.closest('.drawer__panel')) {
+    closeDrawer();
   }
 });
 

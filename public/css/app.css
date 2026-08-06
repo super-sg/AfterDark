@@ -4042,3 +4042,197 @@ html { scroll-behavior: smooth; }
 .alist--warn li b { color: var(--text-faint); font-weight: 500; }
 
 .apanel { position: relative; }
+
+/* ===========================================================================
+   Navigation drawer
+   ---------------------------------------------------------------------------
+   Opens at every width. On a phone it is the only navigation; on a desktop it
+   is the overflow — every board, the whole account menu, and the tall ad column
+   the 244px rail cannot hold.
+   =========================================================================== */
+
+.drawer { position: fixed; inset: 0; z-index: 120; pointer-events: none; }
+body.nav-open .drawer { pointer-events: auto; }
+
+.drawer__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--backdrop);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  transition: opacity 0.22s var(--ease-out);
+}
+body.nav-open .drawer__backdrop { opacity: 1; }
+
+.drawer__panel {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: min(320px, 88vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elev);
+  border-right: 1px solid var(--line);
+  box-shadow: 24px 0 60px -30px rgb(0 0 0 / 0.9);
+  transform: translateX(-100%);
+  transition: transform 0.26s var(--ease-out);
+}
+body.nav-open .drawer__panel { transform: none; }
+
+.drawer__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  height: var(--topbar-h);
+  padding: 0 10px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.drawer__title {
+  flex: 1;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.drawer__scroll {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 10px calc(20px + env(safe-area-inset-bottom, 0px));
+  scrollbar-width: thin;
+}
+.drawer__scroll::-webkit-scrollbar { width: 6px; }
+.drawer__scroll::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 3px; }
+
+.drawer__group { display: grid; gap: 1px; margin-bottom: 14px; }
+
+.drawer__label {
+  margin: 4px 0 6px;
+  padding: 0 8px;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.drawer__link {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 8px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-dim);
+  font: 600 13.5px/1 var(--sans);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.12s var(--ease), color 0.12s var(--ease);
+}
+.drawer__link:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+.drawer__link[aria-current='page'] {
+  background: var(--surface-2);
+  color: var(--text);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.drawer__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+}
+.drawer__icon--board {
+  background: color-mix(in srgb, var(--board-accent, #8a8a9c) 18%, transparent);
+  color: color-mix(in srgb, var(--board-accent, #8a8a9c) 86%, var(--mix-ink));
+}
+.drawer__link:hover .drawer__icon { color: var(--text); }
+
+.drawer__count {
+  margin-left: auto;
+  font: 600 11px/1 var(--mono);
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.drawer__found {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 4px 0 14px;
+  padding: 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font: 600 12.5px/1 var(--sans);
+  text-decoration: none;
+}
+.drawer__found:hover { border-color: var(--accent-line); color: var(--accent-ink); text-decoration: none; }
+
+/* Ads in the drawer centre themselves and never widen it. */
+.adslot--drawer { margin-left: auto; margin-right: auto; max-width: 100%; }
+.adslot--drawer .adslot__frame { max-width: 100%; }
+
+/* The topbar button is real navigation at every width now, not phone-only. */
+.topbar__menu { display: grid; }
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer__panel, .drawer__backdrop { transition: none; }
+}
+
+/* ===========================================================================
+   Sponsored tile (Adsterra direct link)
+   ---------------------------------------------------------------------------
+   A URL, not a script — the one high-yield format that needs no CSP exception.
+   Styled to sit in the layout without pretending to be navigation: it carries
+   its own label and an outbound arrow.
+   =========================================================================== */
+
+.smartlink {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 4px 0 12px;
+  padding: 11px 12px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.14s var(--ease), transform 0.14s var(--ease);
+}
+.smartlink:hover { background: rgb(233 255 26 / 0.18); transform: translateY(-1px); text-decoration: none; }
+.smartlink .ico { margin-left: auto; color: var(--accent-ink); flex: none; }
+
+.smartlink__label {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.smartlink__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.smartlink__body b { font-size: 13.5px; font-weight: 700; }
+.smartlink__body span { font-size: 11.5px; color: var(--text-dim); }
+
+.smartlink::before {
+  content: 'AD';
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: 800 10px/1 var(--sans);
+  letter-spacing: 0.04em;
+}
