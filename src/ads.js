@@ -55,22 +55,45 @@ const NATIVE_HOST = 'https://pl30412496.effectivecpmnetwork.com';
  * a horizontal scrollbar, not an impression.
  */
 const SLOTS = {
-  // Above the feed.
+  // --- above the feed ------------------------------------------------------
   top: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
-  // Right rail: a rectangle high up, a skyscraper below the fold.
+  boardHead: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  // --- right rail, interleaved between panels ------------------------------
   rail: { desktop: 'rectangle', mobile: null, label: 'Advertisement' },
+  railMid: { desktop: 'rectangle', mobile: null, label: 'Advertisement' },
   railTall: { desktop: 'skyscraper', mobile: null, label: 'Advertisement' },
-  // Left rail, under the navigation.
+
+  // --- left rail, under the navigation -------------------------------------
   railLeft: { desktop: 'rectangle', mobile: null, label: 'Advertisement' },
-  // Under a post body, and under the comment thread.
+  railLeftTall: { desktop: 'skyscraper', mobile: null, label: 'Advertisement' },
+
+  // --- article page --------------------------------------------------------
   article: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
   comments: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
-  // Between sections on the directory and community index.
+  commentsMid: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
+  related: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  // --- index and listing pages ---------------------------------------------
   section: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
-  // Bottom of every page.
+  gridMid: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  // --- infinite scroll: one between each appended page ---------------------
+  page: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  // --- always present ------------------------------------------------------
   footer: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+
   // In-feed native, every few rows.
   feed: { native: true, label: 'Sponsored' },
+
+  /**
+   * Sticky bar, phones only. The highest-yielding unit on adult traffic and the
+   * most intrusive, so it is dismissible and the dismissal sticks for the
+   * session — a bar you cannot get rid of is the reason people install
+   * blockers.
+   */
+  sticky: { desktop: null, mobile: 'mobileBanner', label: 'Advertisement', sticky: true },
 };
 
 const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => (
@@ -135,7 +158,7 @@ ${PROBE}
 </body></html>`;
   }
 
-  const unitName = variant === 'mobile' ? (slot.mobile || slot.desktop) : slot.desktop;
+  const unitName = variant === 'mobile' ? (slot.mobile || slot.desktop) : (slot.desktop || slot.mobile);
   const unit = UNITS[unitName];
   if (!unit) return null;
 
@@ -177,12 +200,13 @@ function slotMeta(name) {
   const slot = SLOTS[name];
   if (!slot) return null;
   if (slot.native) return { name, native: true, label: slot.label, height: NATIVE.height };
-  const desktop = UNITS[slot.desktop];
+  const desktop = slot.desktop ? UNITS[slot.desktop] : null;
   const mobile = slot.mobile ? UNITS[slot.mobile] : null;
   return {
     name,
     label: slot.label,
-    desktop: { width: desktop.width, height: desktop.height },
+    sticky: !!slot.sticky,
+    desktop: desktop ? { width: desktop.width, height: desktop.height } : null,
     mobile: mobile ? { width: mobile.width, height: mobile.height } : null,
   };
 }

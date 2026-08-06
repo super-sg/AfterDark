@@ -3879,3 +3879,64 @@ html { scroll-behavior: smooth; }
 
 .footer-ad { max-width: 1460px; margin: 0 auto; padding: 0 18px 8px; }
 .rail .adslot[data-state='filled'] { margin-bottom: 12px; }
+
+/* ===========================================================================
+   Sticky phone bar
+   ---------------------------------------------------------------------------
+   The highest-yielding unit on this kind of traffic and the most intrusive, so:
+   phones only, dismissible, and it sits above the safe-area inset rather than
+   under the home indicator. It inherits the collapse behaviour, so an unsold
+   slot leaves nothing pinned to the bottom of the screen.
+   =========================================================================== */
+
+.sticky-ad { display: none; }
+
+@media (max-width: 760px) {
+  .sticky-ad {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 80;
+    pointer-events: none;   /* the empty wrapper must not eat taps */
+  }
+
+  .sticky-ad .adslot {
+    position: relative;
+    pointer-events: auto;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .sticky-ad .adslot[data-state='filled'] {
+    margin: 0;
+    padding: 4px 0 calc(4px + env(safe-area-inset-bottom, 0px));
+    background: var(--bg-elev);
+    border-top: 1px solid var(--line);
+  }
+
+  /* Give the page somewhere to end, so the last row is not pinned under the
+     bar. Only once the bar is actually showing something. */
+  body:has(.sticky-ad .adslot[data-state='filled']) .footer { padding-bottom: 74px; }
+}
+
+.adslot__close {
+  position: absolute;
+  top: 2px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--surface-3);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.adslot__close:hover { background: var(--surface-2); color: var(--text); }
+
+/* An in-flow slot that carries a close button still needs room for it. */
+.adslot--feed { position: relative; }

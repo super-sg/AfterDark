@@ -311,6 +311,10 @@ export function paintReactions(root, post) {
 // ---------------------------------------------------------------------------
 
 let adConfig = { enabled: false, slots: [] };
+
+/** Slots the reader has closed. Session-scoped: a fresh visit gets them back. */
+const dismissed = new Set();
+export const dismissAd = (name) => dismissed.add(name);
 export const setAdConfig = (cfg) => { adConfig = cfg || { enabled: false, slots: [] }; };
 
 const SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
@@ -327,13 +331,18 @@ const SANDBOX = 'allow-scripts allow-popups allow-popups-to-escape-sandbox';
  */
 export function adSlot(name, { className = '' } = {}) {
   if (!adConfig.enabled) return '';
+  if (dismissed.has(name)) return '';
   const meta = adConfig.slots.find((s) => s.name === name);
   if (!meta) return '';
 
   const mobile = window.matchMedia('(max-width: 760px)').matches;
+  // Slots can be one-sided: the rails have no phone unit, the sticky bar has no
+  // desktop one. Rendering the wrong side is a horizontal scrollbar, not an
+  // impression.
   if (!meta.native && mobile && !meta.mobile) return '';
+  if (!meta.native && !mobile && !meta.desktop) return '';
 
-  const box = meta.native ? { width: 0, height: meta.height } : (mobile && meta.mobile) || meta.desktop;
+  const box = meta.native ? { width: 0, height: meta.height } : ((mobile && meta.mobile) || meta.desktop || meta.mobile);
   const size = meta.native ? `--ad-h:${box.height}px` : `--ad-w:${box.width}px;--ad-h:${box.height}px`;
 
   return `<aside class="adslot${meta.native ? ' adslot--native' : ''}${className ? ` ${className}` : ''}"
@@ -342,7 +351,9 @@ export function adSlot(name, { className = '' } = {}) {
             title="${attr(meta.label)}" loading="lazy" scrolling="no"
             sandbox="${SANDBOX}" referrerpolicy="no-referrer"
             ${meta.native ? '' : `width="${box.width}" height="${box.height}"`}></iframe>
-    <span class="adslot__label">${esc(meta.label)}</span>
+    ${meta.sticky
+      ? `<button class="adslot__close" data-ad-dismiss aria-label="Hide this advert">${icon('close', { size: 14 })}</button>`
+      : `<span class="adslot__label">${esc(meta.label)}</span>`}
   </aside>`;
 }
 
@@ -365,7 +376,7 @@ export function watchAdSlots() {
   });
 }
 
-export function interleaveAds(items, every = 5) {
+export function interleaveAds(items, every = 4) {
   if (!adConfig.enabled || items.length <= every) return null;
   const marks = [];
   for (let i = every; i < items.length; i += every) marks.push(i);

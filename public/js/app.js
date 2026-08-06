@@ -8,7 +8,7 @@ import {
   toast, openModal, closeModal, isModalOpen, voteColumn, votePill, paintVote,
   postCard, feedList, commentTree, media, playVideo, newsLead, newsGrid, sectionHead,
   skeleton, emptyState, errorState, reactionBar, reactionPicker, topicChips,
-  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots,
+  revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd,
   awardRibbon, awardPicker,
 } from './ui.js';
 import { icon, boardIcon } from './icons.js';
@@ -87,8 +87,9 @@ async function boot() {
   watchSystemTheme();
   watchAdSlots();
   watchTopbar();
+  watchAdBreakpoint();
   // One footer slot for the whole session rather than one per route change.
-  qs('#footer-ad').innerHTML = adSlot('footer');
+  mountPersistentAds();
   renderLegalCopy();
   renderTopbarNav();
 
@@ -98,6 +99,8 @@ async function boot() {
   }
 
   await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+  // After loadAds: the slot geometry has to exist before anything can mount.
+  mountPersistentAds();
   renderRails();
   route();
 }
@@ -115,6 +118,8 @@ function showAgeGate() {
       gate.hidden = true;
       document.body.classList.remove('is-gated');
       await Promise.all([loadBoards(), loadStats(), loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+  // After loadAds: the slot geometry has to exist before anything can mount.
+  mountPersistentAds();
       renderRails();
       route();
     } catch (err) {
@@ -342,7 +347,9 @@ function renderLeftRail() {
       <a class="btn btn--sm btn--block" href="/create" data-link>${icon('plus', { size: 14 })} Found a community</a>
     </nav>
 
-    ${adSlot('railLeft')}`;
+    ${adSlot('railLeft')}
+
+    ${adSlot('railLeftTall')}`;
 }
 
 /**
@@ -353,6 +360,25 @@ function renderLeftRail() {
  * adult domains and hand back a block page — and without saying so, a starved
  * wire is indistinguishable from a quiet news day.
  */
+/**
+ * The footer and sticky slots live outside the router, so they mount once
+ * rather than reloading on every navigation — re-requesting an ad because
+ * somebody clicked a link inflates impressions for nothing.
+ *
+ * They are re-mounted on a breakpoint change, though: the sticky bar is
+ * phone-only and the footer swaps unit size, so a rotation or a resized window
+ * would otherwise leave the wrong one (or neither) on screen.
+ */
+function mountPersistentAds() {
+  qs('#footer-ad').innerHTML = adSlot('footer');
+  qs('#sticky-ad').innerHTML = adSlot('sticky');
+}
+
+function watchAdBreakpoint() {
+  const mq = window.matchMedia('(max-width: 760px)');
+  mq.addEventListener('change', mountPersistentAds);
+}
+
 function wireStatusPanel() {
   const enabled = state.sources.filter((s) => s.enabled);
   const down = enabled.filter((s) => s.lastStatus && s.lastStatus !== 'ok');
@@ -421,6 +447,8 @@ function renderRightRail() {
           </li>`).join('')}
       </ol>
     </section>` : ''}
+
+    ${adSlot('railMid')}
 
     ${state.trending.length ? `
     <section class="panel">
@@ -1014,6 +1042,7 @@ async function viewCustomFeed(slug) {
         : 'No communities in this feed yet.'}</p>
       <a class="btn btn--sm" href="/feeds" data-link>${icon('wrench', { size: 14 })} Edit</a>
     </div>
+    ${adSlot('top')}
     ${sortTabs(currentSort())}
     ${data.items.length ? feedList(data.items, feedOpts())
       : emptyState('Quiet', 'Nothing from these communities yet.')}
@@ -1121,7 +1150,7 @@ async function viewSites() {
               <span class="dirsite__go">${esc(hostOf(site.url))}${icon('externalLink', { size: 12 })}</span>
             </a>`).join('')}
         </div>
-      </section>${i === 1 ? adSlot('section') : ''}`).join('')}`;
+      </section>${i % 2 === 1 ? adSlot('section') : ''}`).join('')}`;
 }
 
 async function viewCommunities() {
@@ -1170,7 +1199,9 @@ async function viewCommunities() {
               ${c.subscribed ? 'Joined' : 'Join'}</button>` : ''}
           </div>
         </article>`).join('')}
-    </div>`;
+    </div>
+
+    ${adSlot('gridMid')}`;
 }
 
 const DEFAULT_RULES = [
@@ -1417,6 +1448,7 @@ async function viewTopic(slug) {
   const { topic } = data;
 
   view.innerHTML = `
+    ${adSlot('top')}
     <div class="news-hero news-hero--topic">
       <span class="news-hero__kicker">${icon('hash', { size: 13 })} Topic</span>
       <h1>${esc(topic.label)}</h1>
@@ -1470,6 +1502,7 @@ async function viewBoard(slug) {
 
     ${rulesPanel(board)}
 
+    ${adSlot('boardHead')}
     ${board.nsfw && (pinned.length || rest.length) ? nsfwBanner() : ''}
     ${composerBar(board.slug)}
     ${newPostsPill()}
@@ -1727,13 +1760,14 @@ async function viewPost(id) {
       </div>
 
       <div data-comment-root>${commentTree(data.comments, post.author)}</div>
+      ${adSlot('commentsMid')}
       ${data.truncated ? '<p class="loader">Only the first 800 comments are shown.</p>' : ''}
     </section>
 
     ${adSlot('comments')}
 
     ${data.related?.length
-      ? sectionHead(`More from ${post.board.name}`, 'layers') + feedList(data.related, feedOpts({ view: 'compact', showBoard: false, ads: false }))
+      ? adSlot('related') + sectionHead(`More from ${post.board.name}`, 'layers') + feedList(data.related, feedOpts({ view: 'compact', showBoard: false, ads: false }))
       : ''}`;
 }
 
@@ -1837,6 +1871,7 @@ async function viewSearch() {
   }
 
   view.innerHTML = `
+    ${adSlot('top')}
     <div class="news-hero news-hero--slim">
       <span class="news-hero__kicker">${icon('search', { size: 13 })} Search</span>
       <h1>${esc(q)}</h1>
@@ -2038,7 +2073,12 @@ async function loadMore(button) {
     const feed = holder.firstElementChild;
 
     const lastFeed = [...view.querySelectorAll('.feed')].pop();
-    if (feed && lastFeed) lastFeed.append(...feed.children);
+    if (feed && lastFeed) {
+      // A break between pages is the least intrusive place in an endless list:
+      // the reader has just chosen to continue.
+      lastFeed.insertAdjacentHTML('beforeend', adSlot('page', { className: 'adslot--feed' }));
+      lastFeed.append(...feed.children);
+    }
     observeReveals(lastFeed || view);
 
     if (data.nextCursor) {
@@ -2386,6 +2426,15 @@ document.addEventListener('click', async (event) => {
     return;
   }
   closeAwardPicker();
+
+  const adDismiss = target.closest('[data-ad-dismiss]');
+  if (adDismiss) {
+    event.preventDefault();
+    const slot = adDismiss.closest('[data-adslot]');
+    dismissAd(slot?.dataset.adslot);
+    slot?.remove();
+    return;
+  }
 
   const readAll = target.closest('[data-read-all]');
   if (readAll) {
@@ -2798,6 +2847,8 @@ document.addEventListener('click', async (event) => {
         dead && !summary.added ? 'error' : 'ok'
       );
       await Promise.all([loadTicker(), loadTrending(), loadTopics(), loadSources(), loadAds()]);
+  // After loadAds: the slot geometry has to exist before anything can mount.
+  mountPersistentAds();
       renderRightRail();
       route();
     } catch (err) {
