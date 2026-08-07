@@ -359,10 +359,37 @@ const adOrigin = () => adConfig.origin || '';
  * The compromise is that the expansion is animated over 160ms rather than
  * snapping, so a late fill reads as the page settling rather than jumping.
  */
+/**
+ * Placements added after the running server was last started.
+ *
+ * The client and the server ship together but do not restart together — a host
+ * that serves `public/` off disk picks up new markup on the next request, while
+ * the application process keeps the slot registry it booted with. A placement
+ * the server has never heard of resolved to nothing, and because unfilled slots
+ * collapse, the result was an exit interstitial with no advert on it: the one
+ * placement whose entire purpose is to carry one.
+ *
+ * Each entry names an existing slot of the same shape, so the page shows an
+ * advert of the right size from a slot the server can actually serve. The map
+ * is dead weight the moment that server restarts and answers for the real
+ * names — `find` matches first, and this is only consulted when it fails.
+ */
+const SLOT_FALLBACK = {
+  exitTop: 'top',        // leaderboard / mobile banner
+  exitBox: 'rail',       // 300x250 rectangle
+  support: 'boardHead',  // 468x60 / mobile banner
+};
+
 export function adSlot(name, { className = '' } = {}) {
   if (!adConfig.enabled) return '';
   if (dismissed.has(name)) return '';
-  const meta = adConfig.slots.find((s) => s.name === name);
+
+  let slotName = name;
+  let meta = adConfig.slots.find((s) => s.name === name);
+  if (!meta && SLOT_FALLBACK[name]) {
+    slotName = SLOT_FALLBACK[name];
+    meta = adConfig.slots.find((s) => s.name === slotName);
+  }
   if (!meta) return '';
 
   const mobile = window.matchMedia('(max-width: 760px)').matches;
@@ -387,7 +414,7 @@ export function adSlot(name, { className = '' } = {}) {
 
   return `<aside class="adslot${meta.native ? ' adslot--native' : ''}${className ? ` ${className}` : ''}"
                  style="${attr(size)}" data-adslot="${attr(name)}" aria-hidden="true">
-    <iframe class="adslot__frame" src="${attr(adOrigin())}/ads/${attr(name)}${mobile && meta.mobile ? '?v=mobile' : ''}"
+    <iframe class="adslot__frame" src="${attr(adOrigin())}/ads/${attr(slotName)}${mobile && meta.mobile ? '?v=mobile' : ''}"
             title="${attr(meta.label)}" loading="lazy" scrolling="no"
             sandbox="${attr(adSandbox())}" referrerpolicy="no-referrer"
             ${meta.native ? '' : `width="${box.width}" height="${box.height}"`}></iframe>
@@ -502,7 +529,10 @@ export function shouldGate(url) {
   // Ads off means the gate has nothing to show. It would then be pure friction
   // in front of a link, which is a cost with no matching benefit.
   if (!adConfig.enabled) return false;
-  if ((adConfig.exitMode || 'once') === 'always') return true;
+  // The fallback mirrors what this deployment sets in ADS_EXIT_MODE, so the
+  // gate behaves the same before and after the application next restarts —
+  // otherwise every outbound click changes policy the moment it does.
+  if ((adConfig.exitMode || 'always') === 'always') return true;
   const host = hostOf(url);
   return !!host && !seenHosts().has(host);
 }
