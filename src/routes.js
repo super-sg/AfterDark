@@ -14,6 +14,7 @@ const topics = require('./topics');
 const sources = require('./sources');
 const ads = require('./ads');
 const sites = require('./sites');
+const support = require('./support');
 const social = require('./social');
 const analytics = require('./analytics');
 const fs = require('node:fs');
@@ -1055,6 +1056,64 @@ router.get('/feed/updates', requireAge, (req, res) => {
 router.get('/ads', (req, res) => {
   res.set('Cache-Control', 'public, max-age=300');
   res.json({ ads: ads.config() });
+});
+
+// ---------------------------------------------------------------------------
+// Reader support
+//
+// No age gate on any of these. Age assurance exists to keep minors away from
+// explicit material, and there is none here — the support page is a price list.
+// Gating it would only mean a reader has to confirm they are 18 before they can
+// give the site money, which serves nobody.
+// ---------------------------------------------------------------------------
+
+router.get('/support', (req, res) => {
+  // Private, not public: the response carries no per-reader data today, but it
+  // carries a payment key id, and that should not sit in a shared proxy cache.
+  res.set('Cache-Control', 'private, max-age=60');
+  res.json({ support: support.config(), totals: support.totals() });
+});
+
+/**
+ * Create an order. The amount is validated and sent to Razorpay here, so the
+ * browser never gets to name the figure that reaches the bank — it only gets
+ * back an order id.
+ *
+ * Signing in is not required. Most of the people who would pay for a site like
+ * this have no account on it, and putting a registration wall in front of a
+ * donation is how you collect no donations.
+ */
+router.post('/support/order', rateLimit('support', ipKey), wrap(async (req, res) => {
+  if (!support.RZP_READY) {
+    return fail(res, 503, 'Card payments are not switched on yet.');
+  }
+  try {
+    const order = await support.createOrder({
+      amount: asInt(req.body?.amount, 0),
+      userId: req.user?.id || null,
+      note: String(req.body?.note || ''),
+    });
+    res.json({ order });
+  } catch (err) {
+    // A refusal from Razorpay is the operator's problem to read, not a 500 —
+    // the request was well-formed and the server is working.
+    fail(res, 400, err.message || 'Could not start the payment.');
+  }
+}));
+
+/**
+ * Confirm a payment. Checkout also reports success in the browser, but that
+ * claim arrives from the same place a forged one would, so the signature is
+ * what actually marks the row paid.
+ */
+router.post('/support/verify', rateLimit('support', ipKey), (req, res) => {
+  const ok = support.verifyPayment({
+    orderId: String(req.body?.razorpay_order_id || ''),
+    paymentId: String(req.body?.razorpay_payment_id || ''),
+    signature: String(req.body?.razorpay_signature || ''),
+  });
+  if (!ok) return fail(res, 400, 'That payment could not be verified.');
+  res.json({ ok: true, totals: support.totals() });
 });
 
 /**

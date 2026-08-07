@@ -76,6 +76,26 @@ function startWorker() {
   app.disable('x-powered-by');
   app.set('etag', 'strong');
 
+  /**
+   * Razorpay Checkout is third-party script in the main document, which is the
+   * one thing this site's CSP otherwise refuses outright.
+   *
+   * It is allowed here because it cannot be avoided and because the exception
+   * is conditional: the hosts are named only when both Razorpay keys are set,
+   * so a deploy that has not switched payments on keeps `script-src 'self'`
+   * exactly as it was. Ad tags get no such exception — they stay in sandboxed
+   * frames on another origin — because unlike a payment processor there are
+   * dozens of them and none is load-bearing.
+   */
+  const RZP = require('./src/support').RZP_READY
+    ? {
+      script: ['https://checkout.razorpay.com'],
+      frame: ['https://api.razorpay.com', 'https://checkout.razorpay.com'],
+      connect: ['https://api.razorpay.com', 'https://lumberjack.razorpay.com'],
+      img: ['https://cdn.razorpay.com'],
+    }
+    : { script: [], frame: [], connect: [], img: [] };
+
   if (process.env.TRUST_PROXY === '1') app.set('trust proxy', 1);
 
   app.use(
@@ -83,12 +103,12 @@ function startWorker() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'"],
+          scriptSrc: ["'self'", ...RZP.script],
           // Board accents and image tints are injected as inline custom properties.
           styleSrc: ["'self'", "'unsafe-inline'"],
           // Every publisher image is re-served from /i/, so no remote hosts here.
-          imgSrc: ["'self'", 'data:', 'blob:'],
-          connectSrc: ["'self'"],
+          imgSrc: ["'self'", 'data:', 'blob:', ...RZP.img],
+          connectSrc: ["'self'", ...RZP.connect],
           // Fonts are self-hosted in public/fonts — no Google Fonts request.
           fontSrc: ["'self'"],
           mediaSrc: ["'self'", 'data:'],
@@ -101,6 +121,7 @@ function startWorker() {
             'https://www.youtube-nocookie.com',
             'https://player.vimeo.com',
             ...(process.env.ADS_ORIGIN ? [String(process.env.ADS_ORIGIN).trim().replace(/\/+$/, '')] : []),
+            ...RZP.frame,
           ],
           objectSrc: ["'none'"],
           frameAncestors: ["'none'"],

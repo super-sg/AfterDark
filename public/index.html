@@ -41,7 +41,9 @@
         </ul>
         <div class="age-gate__actions">
           <button class="btn btn--primary btn--lg" id="age-accept">I am 18 or older — enter</button>
-          <a class="btn btn--ghost btn--lg" href="https://www.google.com" id="age-decline" rel="noopener">Leave</a>
+          <!-- No exit gate: an advert in front of the way out of an adult site
+               is the one place it can never be justified. -->
+          <a class="btn btn--ghost btn--lg" href="https://www.google.com" id="age-decline" rel="noopener" data-no-gate>Leave</a>
         </div>
         <p class="age-gate__legal" id="age-gate-legal"></p>
       </div>
@@ -124,9 +126,12 @@
           Video is never hosted or mirrored here; every clip plays on the publisher that made it.
         </p>
         <p class="footer__legal" id="footer-legal"></p>
-        <p class="footer__links">
+        <!-- data-no-gate: compliance and safety links are never put behind an
+             advert. Someone clicking the reporting line is not an impression. -->
+        <p class="footer__links" data-no-gate>
           <a href="/b/meta" data-link>Rules</a>
           <a href="/b/meta" data-link>Appeals</a>
+          <a href="/support" data-link>Buy us a coffee</a>
           <a href="https://www.rtalabel.org" rel="noopener nofollow">RTA label</a>
           <a href="https://www.missingkids.org/gethelpnow/cybertipline" rel="noopener nofollow">Report child exploitation</a>
         </p>

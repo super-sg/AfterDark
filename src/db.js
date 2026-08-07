@@ -337,6 +337,32 @@ CREATE TABLE IF NOT EXISTS sites (
 );
 CREATE INDEX IF NOT EXISTS idx_sites_cat ON sites(hidden, category, sort_order);
 
+-- Reader support ("buy me a coffee").
+--
+-- Rows are written when an order is *created*, not when it is paid, so an
+-- abandoned checkout leaves a trace. Without that, a payment that the
+-- processor took but never confirmed back is invisible from this side, and the
+-- only record of it is an email from the reader asking where their money went.
+--
+-- Deliberately absent: card numbers, names, addresses. The processor holds
+-- everything that identifies a payment method; this table holds an order id, a
+-- number and a status, which is all the site needs and the least it can be
+-- responsible for keeping safe.
+CREATE TABLE IF NOT EXISTS donations (
+  id         INTEGER PRIMARY KEY,
+  order_id   TEXT NOT NULL UNIQUE,
+  payment_id TEXT NOT NULL DEFAULT '',
+  receipt    TEXT NOT NULL DEFAULT '',
+  amount     INTEGER NOT NULL,            -- minor units (paise for INR)
+  currency   TEXT NOT NULL DEFAULT 'INR',
+  status     TEXT NOT NULL DEFAULT 'created',  -- created | paid
+  user_id    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  note       TEXT NOT NULL DEFAULT '',
+  created_at INTEGER NOT NULL,
+  paid_at    INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_donations_status ON donations(status, created_at DESC);
+
 -- Emoji reactions sit alongside the up/down vote rather than replacing it.
 -- The vote decides ranking; reactions are how people say something *about* a
 -- post, which is a much lower-effort contribution than writing a comment and

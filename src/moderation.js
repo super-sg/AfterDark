@@ -250,6 +250,10 @@ const LIMITS = {
   report: { limit: 10, windowMs: 10 * 60 * 1000 },
   register: { limit: 5, windowMs: 60 * 60 * 1000 },
   login: { limit: 10, windowMs: 15 * 60 * 1000 },
+  // Order creation calls a paid API and writes a row, so it is worth a ceiling
+  // — but the ceiling is generous, because a reader retrying a card that keeps
+  // declining is the normal case, not an attack.
+  support: { limit: 20, windowMs: 10 * 60 * 1000 },
 };
 
 module.exports = { screen, clean, cleanUrl, allow, retryAfter, LIMITS, HARD_BLOCK_MESSAGE };

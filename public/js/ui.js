@@ -424,6 +424,117 @@ export function interleaveAds(items, every = 4) {
 }
 
 // ---------------------------------------------------------------------------
+// The exit interstitial
+//
+// Every link that leaves the site goes through here first: a panel naming the
+// destination, two ad slots, and a short wait before the Continue button arms.
+//
+// This is the one placement with the reader's actual attention — they are
+// waiting on it — which is why it earns where an in-feed banner does not. The
+// cost is real, so the design spends it carefully:
+//
+//   - The destination host is shown in full before anything is clicked. An
+//     interstitial that hides where it is sending you is indistinguishable
+//     from a redirect scam, and this is a site whose newsroom reports on those.
+//   - Continue opens in a new tab from a genuine click, so the pop-up blocker
+//     stays out of it and the reader keeps their place here.
+//   - Nothing is auto-redirected. A timer that navigates on its own is how
+//     readers end up somewhere they never chose.
+//   - Escape and Back out still work. Forcing the wait is the point; trapping
+//     the reader is not, and a trap is what makes people install blockers.
+//
+// The wait comes from the server so it is a deployment decision, not a rebuild.
+// ---------------------------------------------------------------------------
+
+const DEFAULT_EXIT_WAIT = 5;
+const exitWait = () => {
+  const n = Number(adConfig.exitWait);
+  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_EXIT_WAIT;
+};
+
+/** Does a URL leave this site? Relative and same-host links do not. */
+export function isExternal(url) {
+  try {
+    return new URL(url, location.href).origin !== location.origin;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Show the interstitial for `url`. Returns nothing — the panel owns the
+ * navigation from here, because the whole point is that it happens after the
+ * wait and not before it.
+ */
+export function exitInterstitial(url, { note = '' } = {}) {
+  const host = hostOf(url) || url;
+  const wait = exitWait();
+
+  const panel = openModal(`
+    <div class="exitgate">
+      <div class="exitgate__head">
+        <span class="exitgate__kicker">Leaving AfterDark</span>
+        <h2 id="exitgate-title">You are being sent to <b>${esc(host)}</b></h2>
+        <p class="exitgate__note">${esc(note
+          || 'AfterDark does not host or control what is on the other side of this link.')}</p>
+      </div>
+
+      ${adSlot('exitTop', { className: 'adslot--exit' })}
+
+      <div class="exitgate__body">
+        ${adSlot('exitBox', { className: 'adslot--exit' })}
+        <div class="exitgate__dest">
+          <span class="exitgate__destlabel">Destination</span>
+          <span class="exitgate__desturl">${esc(url)}</span>
+        </div>
+      </div>
+
+      <div class="exitgate__actions">
+        <button class="btn btn--primary btn--lg" id="exit-go" data-exit-url="${attr(url)}" disabled>
+          <span id="exit-go-text">Continue in ${wait}s</span>
+        </button>
+        <button class="btn btn--ghost btn--lg" data-close>Stay on AfterDark</button>
+      </div>
+    </div>`, { wide: true });
+
+  const go = panel.querySelector('#exit-go');
+  const text = panel.querySelector('#exit-go-text');
+  let left = wait;
+
+  const arm = () => {
+    go.disabled = false;
+    text.textContent = `Continue to ${host}`;
+    go.focus();
+  };
+
+  if (left <= 0) arm();
+  else {
+    const tick = setInterval(() => {
+      // Closed early — Escape, the backdrop, or "Stay". Stop before writing
+      // into a panel that is no longer in the document.
+      if (!panel.isConnected) return clearInterval(tick);
+      left -= 1;
+      if (left > 0) {
+        text.textContent = `Continue in ${left}s`;
+        return;
+      }
+      clearInterval(tick);
+      arm();
+    }, 1000);
+  }
+
+  go.addEventListener('click', () => {
+    if (go.disabled) return;
+    // A real click, so this is not a blocked pop-up. `noopener` keeps the
+    // destination from reaching back into this tab via window.opener.
+    window.open(url, '_blank', 'noopener,noreferrer');
+    closeModal();
+  });
+
+  return panel;
+}
+
+// ---------------------------------------------------------------------------
 // Awards
 //
 // Shown only where one has been given. An empty award row on every post is a

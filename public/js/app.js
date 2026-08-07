@@ -9,7 +9,7 @@ import {
   postCard, feedList, commentTree, media, playVideo, newsLead, newsGrid, sectionHead,
   skeleton, emptyState, errorState, reactionBar, reactionPicker, topicChips,
   revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd, initAdPreview, adConfigSmartLink,
-  awardRibbon, awardPicker,
+  awardRibbon, awardPicker, exitInterstitial, isExternal,
 } from './ui.js';
 import { icon, boardIcon } from './icons.js';
 import { observeReveals, watchTopbar, watchReadingProgress } from './scroll.js';
@@ -294,6 +294,10 @@ function drawerMarkup() {
 
         <a class="drawer__found" href="/create" data-link>${icon('plus', { size: 15 })} Found a community</a>
 
+        <nav class="drawer__group">
+          ${link('/support', 'Buy us a coffee', 'coffee', path === '/support')}
+        </nav>
+
         ${adSlot('drawerTall', { className: 'adslot--drawer' })}
         ${smartLinkTile()}
       </div>
@@ -331,7 +335,9 @@ const toggleDrawer = () =>
 function smartLinkTile() {
   const url = adConfigSmartLink();
   if (!url) return '';
-  return `<a class="smartlink" href="${attr(url)}" target="_blank" rel="noopener nofollow sponsored">
+  // No exit gate: this link *is* the advert. Showing an advert in front of it
+  // costs a paid click and tells the reader nothing they cannot already see.
+  return `<a class="smartlink" href="${attr(url)}" target="_blank" rel="noopener nofollow sponsored" data-no-gate>
     <span class="smartlink__label">Sponsored</span>
     <span class="smartlink__body">
       <b>Featured offers</b>
@@ -684,6 +690,7 @@ const ROUTES = [
   [/^\/b\/([\w-]+)\/settings\/?$/, viewCommunitySettings],
   [/^\/search\/?$/, viewSearch],
   [/^\/submit\/?$/, viewSubmit],
+  [/^\/support\/?$/, viewSupport],
   [/^\/mod\/?$/, viewMod],
 ];
 
@@ -2042,6 +2049,164 @@ async function viewSaved() {
       : emptyState('Nothing saved yet', 'Hit Save on any thread and it turns up here.')}`;
 }
 
+// ---------------------------------------------------------------------------
+// Buy us a coffee
+//
+// Rendered from whatever the server says is switched on, so the same page
+// serves all three states — a payment link, full Checkout, or nothing wired up
+// yet — without the client needing to know which is coming.
+// ---------------------------------------------------------------------------
+
+let rzpScript = null;
+
+/**
+ * Load Checkout once, on demand. Not in the page head: it is a third-party
+ * script on a site that otherwise has none, and most readers never open this
+ * page. Fetching it for them would mean every visitor pays for a feature they
+ * did not ask for.
+ */
+function loadRazorpay() {
+  if (rzpScript) return rzpScript;
+  rzpScript = new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    el.onload = () => resolve(window.Razorpay);
+    el.onerror = () => {
+      // Almost always a blocker rather than an outage, so the message says so
+      // and the page falls back to the payment link.
+      rzpScript = null;
+      reject(new Error('The payment window could not load — an ad blocker usually causes this.'));
+    };
+    document.head.append(el);
+  });
+  return rzpScript;
+}
+
+async function payWithRazorpay(cfg, amount) {
+  const { order } = await api.post('/support/order', { amount });
+  const Razorpay = await loadRazorpay();
+
+  await new Promise((resolve) => {
+    const checkout = new Razorpay({
+      key: order.keyId,
+      order_id: order.orderId,
+      amount: order.amount,
+      currency: order.currency,
+      name: 'AfterDark',
+      description: 'Reader support',
+      theme: { color: '#e9ff1a' },
+      handler: async (response) => {
+        try {
+          // Checkout says it worked; the server decides whether it did.
+          await api.post('/support/verify', response);
+          toast('Thank you — that genuinely helps.', 'ok');
+          route();
+        } catch {
+          toast('Payment taken, but we could not confirm it. Email us and we will sort it.', 'error');
+        }
+        resolve();
+      },
+      modal: { ondismiss: resolve },
+    });
+    checkout.on('payment.failed', (e) => {
+      toast(e?.error?.description || 'The payment did not go through.', 'error');
+      resolve();
+    });
+    checkout.open();
+  });
+}
+
+async function viewSupport() {
+  const { support, totals } = await api.get('/support');
+
+  const tierCard = (tier) => `
+    <button class="tier" data-support-amount="${tier.amount}">
+      <span class="tier__amount">${esc(tier.display)}</span>
+      <span class="tier__label">${esc(tier.label)}</span>
+      <span class="tier__blurb">${esc(tier.blurb)}</span>
+    </button>`;
+
+  // Three states, one page. The unconfigured one is deliberately not a 404:
+  // the footer link is live, and a link that goes nowhere reads as a broken
+  // site rather than a feature that has not opened yet.
+  const panel = support.mode === 'off' || support.mode === 'unconfigured'
+    ? `<div class="support__soon">
+         <p><b>Not open yet.</b> Card payments are being set up. Until then the
+            best support is using the site and arguing well in the comments.</p>
+       </div>`
+    : `<div class="tiers">${support.tiers.map(tierCard).join('')}</div>
+       <div class="support__custom">
+         <label for="support-custom">Or any amount you like</label>
+         <div class="support__customrow">
+           <input id="support-custom" type="number" inputmode="numeric"
+                  min="1" step="1" placeholder="Amount in ${esc(support.currency)}" />
+           <button class="btn btn--primary" id="support-custom-go">Give</button>
+         </div>
+       </div>
+       ${support.mode === 'link' || support.url
+    ? `<p class="support__alt">
+            Card window not loading? <a href="${attr(support.url)}" target="_blank"
+            rel="noopener" data-no-gate>Use the payment page instead</a>.
+          </p>`
+    : ''}`;
+
+  view.innerHTML = `
+    <div class="news-hero">
+      <span class="news-hero__kicker">${icon('coffee', { size: 13 })} Support</span>
+      <h1>Buy us a coffee</h1>
+      <p>AfterDark carries adverts, and adult inventory pays badly — the networks
+         that will take this traffic at all are the ones paying least for it.
+         Reader support is the only money here that does not come from putting
+         another banner in front of somebody.</p>
+    </div>
+
+    <section class="panel support">
+      ${totals.supporters
+    ? `<p class="support__tally"><b>${esc(totals.display)}</b> from
+           ${num(totals.supporters)} ${totals.supporters === 1 ? 'reader' : 'readers'} so far.</p>`
+    : ''}
+      ${panel}
+      <p class="support__small">
+        Payments are handled by the processor — no card details reach this
+        server, and nothing you give is tied to your reading.
+      </p>
+    </section>
+
+    ${adSlot('support')}`;
+
+  if (support.mode === 'off' || support.mode === 'unconfigured') return;
+
+  const give = async (amount) => {
+    if (!Number.isFinite(amount) || amount < support.min) {
+      return toast(`Minimum is ${support.tiers[0]?.display || 'more than that'}.`, 'error');
+    }
+    // In link mode the server has no processor to talk to, so the button is
+    // simply the link. Opened from a click, so no pop-up blocker.
+    if (support.mode !== 'razorpay') {
+      window.open(support.url, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    try {
+      await payWithRazorpay(support, amount);
+    } catch (err) {
+      toast(err.message || 'Could not start the payment.', 'error');
+    }
+  };
+
+  for (const btn of view.querySelectorAll('[data-support-amount]')) {
+    btn.addEventListener('click', () => give(Number(btn.dataset.supportAmount)));
+  }
+
+  const custom = view.querySelector('#support-custom');
+  view.querySelector('#support-custom-go')?.addEventListener('click', () => {
+    // The field is in major units; the server works in minor ones.
+    give(Math.round(Number(custom.value) * (support.min || 100)));
+  });
+  custom?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') view.querySelector('#support-custom-go').click();
+  });
+}
+
 function communityCard(c) {
   if (!c) return '';
   return `<section class="panel commcard" style="--board-accent:${attr(c.accent)}">
@@ -2921,7 +3086,9 @@ document.addEventListener('click', async (event) => {
     // Fire and forget — never delay the reader's click on the answer.
     navigator.sendBeacon?.(`/api/sites/${siteLink.dataset.site}/click`) ||
       api.post(`/sites/${siteLink.dataset.site}/click`).catch(() => {});
-    return;
+    // No return: the exit gate further down owns the navigation. The click is
+    // counted either way, which is what the directory's ordering wants — it
+    // measures interest, not whether somebody sat through the interstitial.
   }
 
   const expandBtn = target.closest('[data-expand]');
@@ -3058,6 +3225,40 @@ document.addEventListener('click', async (event) => {
   const viewBtn = target.closest('[data-view]');
   if (viewBtn) {
     setView(viewBtn.dataset.view);
+    return;
+  }
+
+  /**
+   * Anything leaving the site goes through the interstitial first.
+   *
+   * Handled generically rather than per-placement: the directory, wire source
+   * links, user-submitted links and links inside comment markdown are all the
+   * same event to a reader, and a gate that covers three of the four is a gate
+   * whose behaviour nobody can predict.
+   *
+   * Placed after every `[data-*]` branch above and before internal navigation
+   * below, so a button nested inside an external anchor still wins — the ones
+   * that expand an image or cast a vote are inside links all over the site, and
+   * they must not be turned into a trip to somebody else's domain.
+   *
+   * Two kinds of link opt out with `data-no-gate`, both deliberately:
+   *   - Sponsored links, which are already the advert. Gating an ad behind an
+   *     ad costs a paid click and shows the reader nothing new.
+   *   - Compliance and safety links — the RTA label, the child-exploitation
+   *     reporting line, the age gate's own way out. Putting a countdown and a
+   *     banner in front of someone trying to report abuse or leave an adult
+   *     site is indefensible whatever it earns.
+   */
+  const outbound = target.closest('a[href]');
+  if (outbound
+      && !outbound.closest('[data-no-gate]')
+      && isExternal(outbound.getAttribute('href') || '')
+      // Modifier and middle clicks are the reader asking the browser for a
+      // background tab. Hijacking those breaks a habit for no gain.
+      && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
+      && event.button === 0) {
+    event.preventDefault();
+    exitInterstitial(new URL(outbound.getAttribute('href'), location.href).href);
     return;
   }
 

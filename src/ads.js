@@ -116,6 +116,18 @@ const POPUNDER_HOST = POPUNDER ? 'https://pl30723499.effectivecpmnetwork.com' : 
 const BANNER_HOST = 'https://www.highperformanceformat.com';
 
 /**
+ * How long the exit interstitial holds a reader before its Continue button
+ * arms. Deployment decision rather than a constant: the right number is a
+ * trade between what the placement earns and how many readers it costs, and
+ * that can only be settled by watching the numbers on real traffic.
+ *
+ * Clamped at 15s. Past roughly that, an interstitial stops reading as a page
+ * loading and starts reading as a site that has taken you hostage — and the
+ * reader's response to that is a blocker, not a longer wait.
+ */
+const EXIT_WAIT = Math.min(15, Math.max(0, Number(process.env.ADS_EXIT_WAIT ?? 5) || 0));
+
+/**
  * Placements. Each names a desktop unit and, where the desktop one will not
  * fit, a narrow-screen replacement — a 728×90 leaderboard on a 390px phone is
  * a horizontal scrollbar, not an impression.
@@ -154,6 +166,20 @@ const SLOTS = {
 
   // --- always present ------------------------------------------------------
   footer: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+
+  /**
+   * The leaving-the-site interstitial. Two units, because this is the one
+   * placement a reader is guaranteed to look at: they are waiting on it, so
+   * the creative gets attention that an in-feed banner never does.
+   *
+   * Both are declared units at ordinary shapes. Nothing about the interstitial
+   * needs a special tag — what makes it valuable is the dwell, not the format.
+   */
+  exitTop: { desktop: 'leaderboard', mobile: 'mobileBanner', label: 'Advertisement' },
+  exitBox: { desktop: 'rectangle', mobile: 'rectangle', label: 'Advertisement' },
+
+  // --- support page --------------------------------------------------------
+  support: { desktop: 'banner', mobile: 'mobileBanner', label: 'Advertisement' },
 
   // In-feed, every few rows. This was a native-recommendation widget on a key
   // from an earlier batch, which is also the one unit that never filled once
@@ -294,6 +320,7 @@ const config = () => ({
   slots: Object.keys(SLOTS).map(slotMeta),
   smartLink: SMART_LINK,
   popunder: !!POPUNDER,
+  exitWait: EXIT_WAIT,
   // The client builds frame URLs and the sandbox attribute from these, so the
   // deployment decides the isolation model in one place instead of two.
   origin: ADS_ORIGIN,
