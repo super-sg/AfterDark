@@ -128,6 +128,26 @@ const BANNER_HOST = 'https://www.highperformanceformat.com';
 const EXIT_WAIT = Math.min(15, Math.max(0, Number(process.env.ADS_EXIT_WAIT ?? 5) || 0));
 
 /**
+ * How often the same reader meets the interstitial.
+ *
+ *   once    (default) Once per destination host per session. The first click
+ *           through to a given site is gated; later clicks to the same place go
+ *           straight through.
+ *   always  Every outbound click, without exception.
+ *
+ * `once` is the default because of who it protects. A reader passing through
+ * gets the advert either way — the impression is not lost, only the repeats
+ * are. What it spares is the person reading a thread and opening six links from
+ * the same source, and that person is this site's whole premise: someone who
+ * comes back to argue in the comments. `always` bills them thirty seconds for
+ * one afternoon, and the reliable response to that is an ad blocker, after
+ * which they are worth nothing at all.
+ *
+ * Set ADS_EXIT_MODE=always to gate every click regardless.
+ */
+const EXIT_MODE = process.env.ADS_EXIT_MODE === 'always' ? 'always' : 'once';
+
+/**
  * Placements. Each names a desktop unit and, where the desktop one will not
  * fit, a narrow-screen replacement — a 728×90 leaderboard on a 390px phone is
  * a horizontal scrollbar, not an impression.
@@ -321,6 +341,7 @@ const config = () => ({
   smartLink: SMART_LINK,
   popunder: !!POPUNDER,
   exitWait: EXIT_WAIT,
+  exitMode: EXIT_MODE,
   // The client builds frame URLs and the sandbox attribute from these, so the
   // deployment decides the isolation model in one place instead of two.
   origin: ADS_ORIGIN,

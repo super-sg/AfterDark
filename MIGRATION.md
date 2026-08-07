@@ -87,6 +87,8 @@ Then update these, on the **main** application:
 | `ADS_ORIGIN` | `https://ads.pornsexvideo.org` | §0 — the one that is missing |
 | `SITE_ORIGIN` | `https://afterdark.pornsexvideo.org` | Where the site now lives |
 | `ADS_EXIT_WAIT` | `5` | Seconds the exit interstitial holds before Continue arms |
+| `ADS_EXIT_MODE` | `once` | Gate once per destination per session (see §5) |
+| `SUPPORT_URL` | `https://buymeacoffee.com/<your-handle>` | Switches on the coffee button (see §6) |
 
 And on the **ads-only** application (`ads.pornsexvideo.org`):
 
@@ -115,8 +117,7 @@ tag on the ads host a session cookie. Let people sign in again.
 
 ## 4. Put the welcome page on the apex
 
-Upload the contents of `deploy/welcome/` into the apex document root,
-`/home/olenspro/public_html/`:
+Four files go into the apex document root, `/home/olenspro/public_html/`:
 
 ```
 public_html/index.html
@@ -125,11 +126,36 @@ public_html/ads/rectangle.html
 public_html/ads/mobile.html
 ```
 
-Over SSH, from the application root:
+**If you have SSH** — from the application root, one line:
 
 ```bash
 cp -r deploy/welcome/. /home/olenspro/public_html/
 ```
+
+**If you only have cPanel's File Manager** — the same thing by hand:
+
+1. **File Manager** → `/home/olenspro/public_html`.
+2. If an old `index.html` is there, rename it `index.html.bak` rather than
+   deleting it. It costs nothing and it is the difference between a mistake and
+   an outage.
+3. **+ Folder** → `ads`.
+4. Navigate to the application root → `deploy` → `welcome`. Select
+   `index.html` → **Copy** → destination `/home/olenspro/public_html`.
+5. Go into `deploy/welcome/ads`, select all three files → **Copy** →
+   destination `/home/olenspro/public_html/ads`.
+
+Either way, check it landed before moving on:
+
+```console
+$ curl -s https://pornsexvideo.org/ | grep -c 'Enter AfterDark'
+1
+$ curl -sI https://pornsexvideo.org/ads/rectangle.html | head -1
+HTTP/2 200
+```
+
+If the second one 404s, the `ads/` folder did not copy and every slot on the
+welcome page will silently stay collapsed — which, as in §0, looks exactly like
+a page that was designed without adverts.
 
 Two lines at the top of the script block in `index.html` are the whole
 configuration:
@@ -172,8 +198,27 @@ Two kinds of link deliberately skip it, marked `data-no-gate`:
   reporting line, and the age gate's own way out. A countdown and a banner in
   front of somebody trying to report abuse is indefensible whatever it earns.
 
-Set `ADS_EXIT_WAIT=0` to keep the panel but drop the wait, or raise it. It is
-clamped at 15 seconds.
+### How often the same reader meets it
+
+`ADS_EXIT_MODE` decides, and it ships as `once`: once per **destination host**
+per session. The first click through to xvideos.com is gated; later clicks to
+xvideos.com in that sitting go straight through, and the next visit starts
+over. `www.` is ignored, so `www.pornhub.com` and `pornhub.com` count as one
+destination rather than two bites at the same reader.
+
+Everyone passing through still sees the advert — `once` drops only the repeats.
+What it protects is the person reading one thread and opening six links from
+it, and that person is the site's whole premise: someone who comes back to
+argue in the comments. `always` bills them thirty seconds for one afternoon,
+and the reliable answer to that is an ad blocker, after which they are worth
+nothing at all.
+
+Set `ADS_EXIT_MODE=always` to gate every click regardless. `ADS_EXIT_WAIT=0`
+keeps the panel but drops the wait; it is clamped at 15 seconds.
+
+Worth watching in the first week: impressions on `exitTop`/`exitBox` against
+your outbound click count. If the ratio is far below 1, most clicks are repeats
+and `always` is worth trying. If bounce rate climbs, it is not.
 
 ---
 
@@ -183,17 +228,32 @@ clamped at 15 seconds.
 three states and the server picks whichever is configured — no code change to
 move between them.
 
-**Now, with no Razorpay account:** set one variable on the main app to any
-payment URL (a Razorpay Payment Page, Buy Me a Coffee, a UPI link):
+**Now — Buy Me a Coffee.** Create the profile at buymeacoffee.com, then set one
+variable on the main app:
 
 ```
-SUPPORT_URL=https://your-payment-page
+SUPPORT_URL=https://buymeacoffee.com/<your-handle>
 ```
 
 The tiers become links to it. No third-party script runs, so the site's
-`script-src 'self'` is untouched.
+`script-src 'self'` is untouched, and there is nothing to test beyond clicking
+the button. Payouts go via Stripe, Payoneer or Wise depending on country.
 
-**Later, when Razorpay is set up:** add both keys and full Checkout switches on
+Substitute any other payment page here and it works identically — a UPI link, a
+Razorpay Payment Page, bKash, anything with a URL. The site does not care which.
+
+> **Before committing to Razorpay:** it onboards merchants in **India** (and
+> now Malaysia) only, and wants an Indian business registration and an Indian
+> bank account. Given this account is hosted on a `-bd-` node, check you can
+> actually open one before planning around it. Nothing is wasted if you cannot
+> — `SUPPORT_URL` is the mode the site ships in, and it takes any processor.
+>
+> Also check the processor's own rules on adult-adjacent sites. Payment
+> processors quietly setting content policy is a thing the newsroom on this
+> site reports on, and it applies to the site itself: read the acceptable-use
+> terms before you depend on the revenue.
+
+**Later, if Razorpay is set up:** add both keys and full Checkout switches on
 by itself.
 
 ```
@@ -255,9 +315,13 @@ Then in a browser, because the part that matters cannot be curled:
    outline whether or not it filled, which is the only way to check placements
    on inventory that collapses when unsold. `?ads=off` clears it.
 4. Click any external link — a directory entry, a wire source. The interstitial
-   should appear naming the destination.
+   should appear naming the destination. Continue, come back, and click a link
+   to **the same site** again: it should now go straight through. A link to a
+   *different* site should still be gated. That is `ADS_EXIT_MODE=once`.
 5. Click the child-exploitation reporting link in the footer. It must go
    straight there with **no** interstitial.
+6. Open `/support`. With `SUPPORT_URL` set it shows three tiers and a custom
+   amount; without it, an honest "not open yet".
 
 ---
 

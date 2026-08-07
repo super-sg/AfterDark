@@ -462,6 +462,52 @@ export function isExternal(url) {
 }
 
 /**
+ * Destinations this reader has already sat through the gate for.
+ *
+ * Session-scoped, so a fresh visit pays again — this is not a permanent
+ * exemption, it is a rule against billing the same person repeatedly inside one
+ * sitting. sessionStorage with an in-memory fallback, because private mode
+ * throws on it and a reader in private mode should get the same treatment as
+ * everyone else rather than the gate on every single click.
+ */
+const SEEN_KEY = 'ad:exit-seen';
+const seenMemory = new Set();
+
+function seenHosts() {
+  try {
+    const raw = sessionStorage.getItem(SEEN_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return seenMemory;
+  }
+}
+
+function rememberHost(host) {
+  seenMemory.add(host);
+  try {
+    const all = seenHosts();
+    all.add(host);
+    sessionStorage.setItem(SEEN_KEY, JSON.stringify([...all]));
+  } catch { /* private mode — seenMemory already has it */ }
+}
+
+/**
+ * Should this outbound click be gated?
+ *
+ * Answered here rather than at the call site so the policy lives in one place:
+ * the mode comes from the server, and "already seen" has to mean the same thing
+ * everywhere or the gate becomes unpredictable.
+ */
+export function shouldGate(url) {
+  // Ads off means the gate has nothing to show. It would then be pure friction
+  // in front of a link, which is a cost with no matching benefit.
+  if (!adConfig.enabled) return false;
+  if ((adConfig.exitMode || 'once') === 'always') return true;
+  const host = hostOf(url);
+  return !!host && !seenHosts().has(host);
+}
+
+/**
  * Show the interstitial for `url`. Returns nothing — the panel owns the
  * navigation from here, because the whole point is that it happens after the
  * wait and not before it.
@@ -525,6 +571,10 @@ export function exitInterstitial(url, { note = '' } = {}) {
 
   go.addEventListener('click', () => {
     if (go.disabled) return;
+    // Recorded on the way *through*, not when the panel opened. Marking it on
+    // open would make Escape a free skip: open the gate, dismiss it, click
+    // again, and the destination is now exempt for the rest of the session.
+    rememberHost(host);
     // A real click, so this is not a blocked pop-up. `noopener` keeps the
     // destination from reaching back into this tab via window.opener.
     window.open(url, '_blank', 'noopener,noreferrer');

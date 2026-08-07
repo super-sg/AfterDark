@@ -9,7 +9,7 @@ import {
   postCard, feedList, commentTree, media, playVideo, newsLead, newsGrid, sectionHead,
   skeleton, emptyState, errorState, reactionBar, reactionPicker, topicChips,
   revealsAll, setRevealAll, rememberReveal, runtime, adSlot, setAdConfig, watchAdSlots, dismissAd, initAdPreview, adConfigSmartLink,
-  awardRibbon, awardPicker, exitInterstitial, isExternal,
+  awardRibbon, awardPicker, exitInterstitial, isExternal, shouldGate,
 } from './ui.js';
 import { icon, boardIcon } from './icons.js';
 import { observeReveals, watchTopbar, watchReadingProgress } from './scroll.js';
@@ -3248,6 +3248,10 @@ document.addEventListener('click', async (event) => {
    *     reporting line, the age gate's own way out. Putting a countdown and a
    *     banner in front of someone trying to report abuse or leave an adult
    *     site is indefensible whatever it earns.
+   *
+   * `shouldGate` decides whether this particular click is one the reader has
+   * already paid for this session — falling through to the browser's own
+   * navigation when it is, so a repeat link behaves exactly like a normal link.
    */
   const outbound = target.closest('a[href]');
   if (outbound
@@ -3257,9 +3261,12 @@ document.addEventListener('click', async (event) => {
       // background tab. Hijacking those breaks a habit for no gain.
       && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey
       && event.button === 0) {
-    event.preventDefault();
-    exitInterstitial(new URL(outbound.getAttribute('href'), location.href).href);
-    return;
+    const href = new URL(outbound.getAttribute('href'), location.href).href;
+    if (shouldGate(href)) {
+      event.preventDefault();
+      exitInterstitial(href);
+      return;
+    }
   }
 
   const link = target.closest('a[data-link]');
