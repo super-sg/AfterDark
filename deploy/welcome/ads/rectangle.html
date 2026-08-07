@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  One ad unit, one document.
+
+  Adsterra's tag reads a single global `atOptions` object that has to be set
+  before its invoke script runs, so two units in one document overwrite each
+  other's configuration. One frame per unit is the only arrangement that works,
+  and it is also what keeps the inline-script allowance confined to a file that
+  has nothing else in it.
+
+  This is the 300x250 medium rectangle.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <script type="text/javascript">
+    atOptions = {
+      key: '2dce7e938b5a6c5ed772e4bf63f2e76b',
+      format: 'iframe',
+      height: 250,
+      width: 300,
+      params: {}
+    };
+  </script>
+  <script type="text/javascript" src="https://www.highperformanceformat.com/2dce7e938b5a6c5ed772e4bf63f2e76b/invoke.js"></script>
+
+  <!--
+    Report whether anything actually landed, so the parent can collapse an
+    unsold slot instead of leaving a grey labelled rectangle on the page.
+    Two looks: one when the tag has had a moment, one after a slow network.
+  -->
+  <script>
+    (function () {
+      function filled() {
+        var nodes = document.body.querySelectorAll('iframe, img, ins, div');
+        for (var i = 0; i < nodes.length; i++) {
+          var r = nodes[i].getBoundingClientRect();
+          if (r.width > 40 && r.height > 20) return true;
+        }
+        return false;
+      }
+      function report() {
+        try { parent.postMessage({ afterdarkAd: filled() ? 'filled' : 'empty' }, '*'); } catch (e) {}
+      }
+      setTimeout(report, 1200);
+      setTimeout(report, 3500);
+    })();
+  </script>
+</body>
+</html>
