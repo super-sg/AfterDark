@@ -305,9 +305,18 @@ ${PROBE}
 /**
  * Who may embed these frames. When ads move to their own host this is the only
  * thing standing between it and anyone framing our inventory into their page,
- * so it names the site rather than allowing all comers.
+ * so it names the sites rather than allowing all comers.
+ *
+ * Plural, because more than one of our own pages legitimately frames these: the
+ * app on its subdomain, and the static welcome page on the apex, which has no
+ * application behind it and so cannot serve its own. Accepts a comma- or
+ * space-separated list.
  */
-const SITE_ORIGIN = String(process.env.SITE_ORIGIN || '').trim().replace(/\/+$/, '');
+const SITE_ORIGIN = String(process.env.SITE_ORIGIN || '')
+  .split(/[\s,]+/)
+  .map((o) => o.trim().replace(/\/+$/, ''))
+  .filter(Boolean)
+  .join(' ');
 
 const FRAME_CSP = [
   `frame-ancestors 'self'${SITE_ORIGIN ? ` ${SITE_ORIGIN}` : ''}`,
