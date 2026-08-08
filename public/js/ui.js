@@ -850,7 +850,13 @@ export function feedList(items, options = {}) {
   // "more from this board" strip stay clean.
   const marks = options.ads === false ? null : interleaveAds(items);
   const body = items
-    .map((p, i) => (marks && marks.includes(i) ? adSlot('feed', { className: 'adslot--feed' }) : '') + render(p))
+    // The first in-feed placement is native and the rest are banners: native
+    // fills against inventory that will not bid on a banner, and putting it
+    // first means the one placement most likely to be sold is also the one
+    // most likely to be seen.
+    .map((p, i) => (marks && marks.includes(i)
+      ? adSlot(marks.indexOf(i) === 0 ? 'native' : 'feed', { className: 'adslot--feed' })
+      : '') + render(p))
     .join('');
 
   return `<div class="feed feed--${view}">${body}</div>`;

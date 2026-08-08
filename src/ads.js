@@ -142,6 +142,24 @@ const POPUNDER_HOST = (() => {
 const BANNER_HOST = 'https://www.highperformanceformat.com';
 
 /**
+ * Native recommendations. Per-domain like every other unit, so it comes from
+ * environment; the container id is the key, which is how the tag finds its own
+ * slot. Unset means the native placement resolves to nothing and collapses,
+ * rather than rendering an empty labelled box.
+ *
+ * Worth having precisely where banners are weak: native fills against
+ * inventory that will not bid on a 728x90, which on low-CPM traffic is most
+ * of it.
+ */
+const NATIVE_KEY = String(process.env.ADS_NATIVE_KEY || '').trim();
+const NATIVE_HOST = String(process.env.ADS_NATIVE_HOST || '').trim().replace(/\/+$/, '');
+const NATIVE = {
+  script: NATIVE_KEY && NATIVE_HOST ? `${NATIVE_HOST}/${NATIVE_KEY}/invoke.js` : '',
+  container: `container-${NATIVE_KEY}`,
+  height: 320,
+};
+
+/**
  * How long the exit interstitial holds a reader before its Continue button
  * arms. Deployment decision rather than a constant: the right number is a
  * trade between what the placement earns and how many readers it costs, and
@@ -232,6 +250,8 @@ const SLOTS = {
   // the origin was fixed — most likely retired. Replaced with a declared unit
   // at a row-sized shape, so nothing here runs on a tag we were not given.
   feed: { desktop: 'banner', mobile: 'mobileBanner', label: 'Sponsored' },
+  // In-feed native. Sizes itself, so no unit and no fixed box.
+  native: { native: true, label: 'Sponsored' },
 
   /**
    * Sticky bar, phones only. The highest-yielding unit on adult traffic and the
@@ -301,6 +321,19 @@ function frameHtml(slotName, variant) {
   const slot = SLOTS[slotName];
   if (!slot) return null;
 
+  // Native recommendations size themselves, so the frame gets no fixed box and
+  // the tag is a container plus an async script rather than an atOptions pair.
+  if (slot.native) {
+    if (!NATIVE.script) return null;
+    return `<!doctype html><html><head><meta charset="utf-8">
+<style>html,body{margin:0;padding:0;background:transparent;overflow:hidden}</style>
+</head><body>
+<div id="${NATIVE.container}"></div>
+<script async data-cfasync="false" src="${NATIVE.script}"></script>
+${PROBE}
+</body></html>`;
+  }
+
   const unitName = variant === 'mobile' ? (slot.mobile || slot.desktop) : (slot.desktop || slot.mobile);
   const unit = UNITS[unitName];
   if (!unit) return null;
@@ -347,11 +380,11 @@ const SITE_ORIGIN = String(process.env.SITE_ORIGIN || '')
 const FRAME_CSP = [
   `frame-ancestors 'self'${SITE_ORIGIN ? ` ${SITE_ORIGIN}` : ''}`,
   "default-src 'none'",
-  `script-src 'unsafe-inline' ${BANNER_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
+  `script-src 'unsafe-inline' ${BANNER_HOST}${NATIVE_HOST ? ` ${NATIVE_HOST}` : ''}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "style-src 'unsafe-inline'",
   'img-src https: data:',
   'frame-src https:',
-  `connect-src ${BANNER_HOST}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
+  `connect-src ${BANNER_HOST}${NATIVE_HOST ? ` ${NATIVE_HOST}` : ''}${POPUNDER_HOST ? ` ${POPUNDER_HOST}` : ''}`,
   "form-action 'none'",
 ].join('; ');
 
@@ -359,6 +392,11 @@ const FRAME_CSP = [
 function slotMeta(name) {
   const slot = SLOTS[name];
   if (!slot) return null;
+  if (slot.native) {
+    return NATIVE.script
+      ? { name, native: true, label: slot.label, height: NATIVE.height }
+      : null;
+  }
   const desktop = slot.desktop ? UNITS[slot.desktop] : null;
   const mobile = slot.mobile ? UNITS[slot.mobile] : null;
   return {
