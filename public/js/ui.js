@@ -378,6 +378,7 @@ const SLOT_FALLBACK = {
   exitTop: 'top',        // leaderboard / mobile banner
   exitBox: 'rail',       // 300x250 rectangle
   support: 'boardHead',  // 468x60 / mobile banner
+  native: 'feed',        // until the server knows the native unit
 };
 
 export function adSlot(name, { className = '' } = {}) {
