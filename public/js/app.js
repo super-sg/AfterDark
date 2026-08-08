@@ -796,6 +796,45 @@ async function viewFeed(mode = 'home') {
   const scope = mode === 'home' && state.me && state.subscriptions.length ? 'subscribed' : '';
   const data = await api.get(`/feed${query({ sort, t: currentWindow(), scope, limit: 25 })}`);
 
+  // Bring the firehose boards back onto the shared feeds.
+  //
+  // The server drops them from every scope-wide feed, which was right when the
+  // brief was "news, not a wall of clips". The cost only shows up once the
+  // clip boards are the ones actually moving: they take hundreds of posts a
+  // day while the trade press takes a handful, so the front page could sit
+  // unchanged for a day while the site was busy the whole time — and to a
+  // reader that is indistinguishable from a site that has stopped.
+  //
+  // Fetched per board because the exclusion is hardcoded server-side and no
+  // parameter reaches past it. Merged newest-first and capped, so the clips
+  // are present without burying the reporting that Hot is ranking.
+  if (!scope) {
+    const FIREHOSE = ['videos', 'jav', 'hentai'];
+    const fresh = (await Promise.all(FIREHOSE.map((b) => api
+      .get(`/feed${query({ sort: 'new', board: b, limit: 6 })}`)
+      .then((r) => r.items || [])
+      .catch(() => []))))
+      .flat()
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, sort === 'new' ? 12 : 6);
+
+    const seen = new Set(data.items.map((p) => p.id));
+    const add = fresh.filter((p) => !seen.has(p.id));
+
+    if (sort === 'new') {
+      // "New" means new. One list, strictly by arrival.
+      data.items = [...data.items, ...add].sort((a, b) => b.createdAt - a.createdAt).slice(0, 25);
+    } else {
+      // Every other sort is a judgement about what is worth reading, and a clip
+      // that arrived nine minutes ago has not earned the top of it. Spaced
+      // through the list instead, so the page visibly moves without the
+      // ranking being handed over to whatever posted last.
+      const out = [...data.items];
+      add.forEach((p, i) => out.splice(Math.min(out.length, 3 + i * 4), 0, p));
+      data.items = out.slice(0, 25);
+    }
+  }
+
   const HEADERS = {
     popular: ['flame', 'Popular', 'The whole site, ranked by what is moving right now.'],
     all: ['layers', 'All', 'Everything as it lands, newest first, unfiltered.'],
