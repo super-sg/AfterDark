@@ -956,15 +956,76 @@ const statTile = (label, value, hint = '') => `
     ${hint ? `<span class="atile__hint">${esc(hint)}</span>` : ''}
   </div>`;
 
+/**
+ * Advertising revenue, from the network's own reporting.
+ *
+ * Shown next to traffic and moderation because on an ad-funded site those are
+ * one question, not three: a spike in visitors that does not move impressions
+ * means the tags are broken, and impressions that do not move revenue mean
+ * nobody is bidding. Neither is visible from either number alone.
+ *
+ * CPM is given to three decimals deliberately. At this scale it is measured in
+ * fractions of a cent, and rounding it to "$0.03" would hide the difference
+ * between a market that is quiet and one that has stopped.
+ */
+function revenuePanel(rev) {
+  if (!rev || rev.available === false) {
+    return `<section class="panel">
+      <p class="panel__title">${icon('chart', { size: 13 })} Revenue</p>
+      <p class="panel__empty">Adsterra reporting is unavailable right now. The site is unaffected.</p>
+    </section>`;
+  }
+  if (!rev.configured) {
+    return `<section class="panel">
+      <p class="panel__title">${icon('chart', { size: 13 })} Revenue</p>
+      <p class="panel__empty">Set <code>ADSTERRA_API_KEY</code> to show earnings here.</p>
+    </section>`;
+  }
+
+  const money = (n) => `$${Number(n || 0).toFixed(n < 1 ? 4 : 2)}`;
+  const best = Math.max(1, ...rev.series.map((d) => d.impressions));
+
+  return `
+    <section class="panel">
+      <p class="panel__title">${icon('chart', { size: 13 })} Revenue · last ${rev.days} days</p>
+      <div class="agrid">
+        <div class="stat-tile"><b>${money(rev.revenue)}</b><span>Earned</span></div>
+        <div class="stat-tile"><b>${num(rev.impressions)}</b><span>Impressions</span></div>
+        <div class="stat-tile"><b>${num(rev.clicks)}</b><span>Clicks</span></div>
+        <div class="stat-tile"><b>${money(rev.cpm)}</b><span>CPM</span></div>
+      </div>
+
+      ${rev.series.length ? `<div class="spark">${sparkline(rev.series.map((d) => d.impressions))}</div>` : ''}
+
+      ${rev.countries.length ? `
+        <p class="panel__subtitle">Where the impressions came from</p>
+        <ul class="alist">
+          ${rev.countries.map((c) => `
+            <li>
+              <span>${esc(c.country)}</span>
+              <span class="alist__bar" style="--w:${Math.round((c.impressions / best) * 100)}%"></span>
+              <b>${num(c.impressions)} · ${money(c.cpm)}</b>
+            </li>`).join('')}
+        </ul>` : ''}
+
+      ${rev.impressions && !rev.revenue ? `
+        <p class="panel__note">Impressions are registering but nothing is being paid for them.
+           That is demand, not a broken tag — a new domain earns little until it has history.</p>` : ''}
+    </section>`;
+}
+
 async function viewAdmin() {
   if (!state.me || state.me.role !== 'admin') {
     view.innerHTML = emptyState('Admins only', 'This panel is restricted to site administrators.');
     return;
   }
 
-  const [live, overview] = await Promise.all([
+  // Revenue comes from a third party, so it is allowed to fail on its own:
+  // the rest of the panel is this site's own data and must render regardless.
+  const [live, overview, revenue] = await Promise.all([
     api.get('/admin/live'),
     api.get('/admin/overview'),
+    api.get('/admin/revenue').catch(() => ({ available: false })),
   ]);
 
   const uptime = (s) => (s < 3600 ? `${Math.round(s / 60)}m` : s < 86400 ? `${Math.round(s / 3600)}h` : `${Math.round(s / 86400)}d`);
@@ -1005,6 +1066,8 @@ async function viewAdmin() {
             <li><a href="${attr(p.path)}" data-link>${esc(p.path)}</a><b>${p.n}</b></li>`).join('')}
         </ul>` : ''}
     </section>
+
+    ${revenuePanel(revenue)}
 
     <section class="panel">
       <p class="panel__title">${icon('layers', { size: 13 })} Content</p>

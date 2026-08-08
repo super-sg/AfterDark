@@ -17,6 +17,7 @@ const sites = require('./sites');
 const support = require('./support');
 const social = require('./social');
 const analytics = require('./analytics');
+const adsterra = require('./adsterra');
 const fs = require('node:fs');
 
 const router = express.Router();
@@ -406,6 +407,25 @@ function notifyAboutComment({ commentId, postId, post, parentId, actor, body }) 
 
 const requireAdmin = (req, res, next) =>
   (req.user && req.user.role === 'admin' ? next() : fail(res, 403, 'Admins only.'));
+
+/**
+ * Advertising revenue, read from the network rather than guessed at.
+ *
+ * Admin-only and never cached by the browser: it is account financial data,
+ * and the API key behind it stays on the server. A failure here answers with
+ * `available: false` rather than an error status — the panel that shows this
+ * also shows moderation and traffic, and somebody else's API being down is no
+ * reason for those to disappear.
+ */
+router.get('/admin/revenue', auth.requireUser, requireAdmin, wrap(async (req, res) => {
+  res.set('Cache-Control', 'no-store');
+  try {
+    const days = Math.min(30, Math.max(1, Number(req.query.days) || 7));
+    res.json({ available: true, ...(await adsterra.report({ days })) });
+  } catch (err) {
+    res.json({ available: false, error: err.message });
+  }
+}));
 
 router.get('/admin/live', auth.requireUser, requireAdmin, (req, res) => {
   const live = analytics.live();
