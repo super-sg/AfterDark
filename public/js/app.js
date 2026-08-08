@@ -808,7 +808,7 @@ async function viewFeed(mode = 'home') {
   // Fetched per board because the exclusion is hardcoded server-side and no
   // parameter reaches past it. Merged newest-first and capped, so the clips
   // are present without burying the reporting that Hot is ranking.
-  if (!scope) {
+  if (!scope && data.firehoseExcluded !== false) {
     const FIREHOSE = ['videos', 'jav', 'hentai'];
     const fresh = (await Promise.all(FIREHOSE.map((b) => api
       .get(`/feed${query({ sort: 'new', board: b, limit: 6 })}`)

@@ -1028,9 +1028,23 @@ router.get('/feed', requireAge, (req, res) => {
     ? null
     : `f|${sort}|${boardId || '-'}|${window}|${limit}|${cursor || '-'}|nofh`;
 
-  // The video shelf is a place you go, not something that arrives. 150 clips a
-  // day would bury every discussion thread on recency alone.
-  const opts = { sort, window, cursor, limit, excludeFirehose: true };
+  // Whether the clip boards appear in the scope-wide feeds.
+  //
+  // Excluding them was right while the trade press was posting: the video
+  // shelf is a place you go, not something that arrives, and 150 clips a day
+  // would bury every discussion thread on recency alone.
+  //
+  // It stops being right the moment those boards are the only ones moving.
+  // Measured on this deployment: 463 clips in a day against a handful of news
+  // stories, so every shared feed showed nothing newer than twenty-one hours
+  // while the site was busy throughout — which to a reader reloading the front
+  // page is indistinguishable from a site that has died. That is a worse
+  // failure than a busy feed, so the default is now to include them.
+  //
+  // HOME_EXCLUDE_FIREHOSE=1 restores the old behaviour for a deployment whose
+  // newsroom out-posts its clip boards.
+  const excludeFirehose = process.env.HOME_EXCLUDE_FIREHOSE === '1';
+  const opts = { sort, window, cursor, limit, excludeFirehose };
   const result = cacheKey
     ? feedCache.wrap(cacheKey, () => store.posts.feed({ ...opts, boardId }))
     : store.posts.feed({ ...opts, boardIds });
@@ -1038,7 +1052,9 @@ router.get('/feed', requireAge, (req, res) => {
   // Clone so per-viewer vote state never leaks into the shared cache entry.
   const items = result.items.map((p) => ({ ...p }));
   decorate(req, items);
-  res.json({ items, nextCursor: result.nextCursor, sort, window, scope });
+  // Told to the client so its own merge can stand down: it fetches the clip
+  // boards separately when this is true, and must not double up when it is not.
+  res.json({ items, nextCursor: result.nextCursor, sort, window, scope, firehoseExcluded: excludeFirehose });
 });
 
 /**
