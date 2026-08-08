@@ -78,14 +78,26 @@ if (ENABLED && !ADS_ORIGIN && !UNSAFE_SAME_ORIGIN) {
 /**
  * Publisher units. These are Adsterra banner tags: the page declares an
  * `atOptions` object and then loads the matching invoke script.
+ *
+ * Every key is overridable by environment, because an Adsterra banner key is
+ * issued **per domain**, not per account. The defaults below were issued for
+ * pornsexvideo.org; serving them from anywhere else is asking a network to pay
+ * for inventory it did not sell, and the answer is a blank frame. So moving the
+ * site to another hostname means a new set of keys, and that is a deployment
+ * fact rather than a code change — hence env, so it survives a `git pull`.
+ *
+ * The keys are not secret. They appear in the page source of every ad frame,
+ * which is how the network recognises them.
  */
+const unitKey = (envName, fallback) => String(process.env[envName] || '').trim() || fallback;
+
 const UNITS = {
-  leaderboard: { key: 'f1e5e7079b5c4940c564196b07236884', width: 728, height: 90 },
-  rectangle: { key: '2dce7e938b5a6c5ed772e4bf63f2e76b', width: 300, height: 250 },
-  skyscraper: { key: 'b15c0ac6d8949dbf6e6e6b8f54faaca0', width: 160, height: 600 },
-  mobileBanner: { key: 'cd4c2b0236320b682d8ee8ca10abfee0', width: 320, height: 50 },
-  halfTower: { key: '8fcbbc5e27276cacc67255616e36ad44', width: 160, height: 300 },
-  banner: { key: 'e308ee2af40bd02bb82dcb6c6b5788b4', width: 468, height: 60 },
+  leaderboard: { key: unitKey('ADS_KEY_728X90', 'f1e5e7079b5c4940c564196b07236884'), width: 728, height: 90 },
+  rectangle: { key: unitKey('ADS_KEY_300X250', '2dce7e938b5a6c5ed772e4bf63f2e76b'), width: 300, height: 250 },
+  skyscraper: { key: unitKey('ADS_KEY_160X600', 'b15c0ac6d8949dbf6e6e6b8f54faaca0'), width: 160, height: 600 },
+  mobileBanner: { key: unitKey('ADS_KEY_320X50', 'cd4c2b0236320b682d8ee8ca10abfee0'), width: 320, height: 50 },
+  halfTower: { key: unitKey('ADS_KEY_160X300', '8fcbbc5e27276cacc67255616e36ad44'), width: 160, height: 300 },
+  banner: { key: unitKey('ADS_KEY_468X60', 'e308ee2af40bd02bb82dcb6c6b5788b4'), width: 468, height: 60 },
 };
 
 /**
@@ -106,12 +118,26 @@ const SMART_LINK = process.env.ADS_SMART_LINK
  * site's whole premise is people coming back to argue in the comments. Shipped
  * behind a flag so the choice is explicit rather than inherited.
  */
+// The URL is per-domain like the banner keys, so it comes from environment too.
+// ADS_POPUNDER stays the on/off switch; ADS_POPUNDER_URL says which one.
 const POPUNDER = process.env.ADS_POPUNDER === '1'
-  ? 'https://pl30723499.effectivecpmnetwork.com/a2/14/5a/a2145ad7b1da3787c6e8122370de8d23.js'
+  ? String(process.env.ADS_POPUNDER_URL || '').trim()
+    || 'https://pl30723499.effectivecpmnetwork.com/a2/14/5a/a2145ad7b1da3787c6e8122370de8d23.js'
   : '';
-// Only named in the frame CSP when the pop-under is actually switched on —
-// a permitted host that nothing loads is a standing permission for no reason.
-const POPUNDER_HOST = POPUNDER ? 'https://pl30723499.effectivecpmnetwork.com' : '';
+// Derived from the URL rather than written twice: a hardcoded host silently
+// stops matching the moment ADS_POPUNDER_URL points somewhere else, and the
+// symptom is a pop-under refused by our own CSP with nothing to say why.
+// Only present when the pop-under is switched on — a permitted host that
+// nothing loads is a standing permission for no reason.
+const POPUNDER_HOST = (() => {
+  if (!POPUNDER) return '';
+  try {
+    return new URL(POPUNDER).origin;
+  } catch {
+    console.warn('[ads] ADS_POPUNDER_URL is not a valid URL; pop-under disabled.');
+    return '';
+  }
+})();
 
 const BANNER_HOST = 'https://www.highperformanceformat.com';
 
